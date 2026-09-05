@@ -339,6 +339,10 @@
     font-size:13px; opacity:.55; pointer-events:none;
   }
 
+  .tools-row{display:flex; gap:6px; flex-wrap:wrap; padding:0 2px; margin-bottom:12px;}
+  .tools-row .btn{background:transparent; border-color:transparent; color:var(--ink-soft); font-weight:600;}
+  .tools-row .btn:hover{background:var(--card); border-color:var(--line);}
+
   .row-item{
     display:flex; align-items:center; gap:12px;
     padding:13px 4px; border-top:1px solid var(--line);
@@ -440,15 +444,20 @@
 
   <div id="licenseStrip"></div>
 
+  <!-- Над карточкой, а не под ней: под списком из двухсот пациентов до этих кнопок
+       пришлось бы прокручивать весь список. Приглушены, чтобы не спорить со списком. -->
+  <div class="tools-row">
+    <button class="btn btn-line btn-sm" id="btnServices" onclick="openSettings()">⚙️ Услуги и базовые цены</button>
+    <button class="btn btn-line btn-sm" onclick="openBackup()">💾 Резервная копия</button>
+    <button class="btn btn-line btn-sm" id="btnHelp" onclick="openHelp()">❔ Помощь</button>
+  </div>
+
   <div class="card">
     <div class="search-box">
       <input type="text" id="patientSearch" placeholder="Поиск по ФИО" oninput="renderPatients()">
     </div>
     <div class="chart-actions" style="margin-top:0;">
       <button class="btn btn-primary btn-sm" id="btnAddPatient" onclick="createPatient()">+ Добавить пациента</button>
-      <button class="btn btn-line btn-sm" id="btnServices" onclick="openSettings()">⚙️ Услуги и базовые цены</button>
-      <button class="btn btn-line btn-sm" onclick="openBackup()">💾 Резервная копия</button>
-      <button class="btn btn-line btn-sm" id="btnHelp" onclick="openHelp()">❔ Помощь</button>
     </div>
     <div id="patientsList" style="margin-top:6px;"></div>
   </div>
@@ -618,11 +627,15 @@
         <label for="agreementText">Текст согласия</label>
       </div>
       <div class="ns-hint" style="margin:-8px 0 4px;">Печатается в конце каждого PDF, ниже итоговой суммы. Действует сразу для всех планов — и новых, и уже созданных.</div>
-      <textarea id="agreementText" rows="12" onchange="saveAgreement()">После обследования и беседы с врачом мне понятен план, объём лечения, возможные осложнения на этапах лечения и с их учётом изменения плана лечения, этапов лечения, необходимость возможного дополнительного обследования, изменения сроков лечения, дополнительной оплаты.
-Я получил(а) ответы на все мои вопросы и доверяю квалификации врача.
-На лечение согласен(на). С условиями оплаты согласен(на).
-Оплата лечения пациентом происходит по прейскуранту клиники на день оказания услуг.
-Стоимость указанного предварительного плана лечения действительна в течение 3х месяцев.</textarea>
+      <textarea id="agreementText" rows="12" onchange="saveAgreement()">Врач ознакомил меня с планом лечения: какие вмешательства предстоят, в каком порядке они проводятся и сколько стоят. Я задал(а) все интересующие меня вопросы и получил(а) на них понятные ответы.
+
+Мне разъяснено, что план предварительный. По ходу лечения может понадобиться дополнительное обследование, могут измениться состав и очерёдность этапов, сроки и итоговая стоимость.
+
+Я предупреждён(а) о возможных осложнениях на каждом этапе лечения.
+
+С планом лечения и условиями оплаты согласен(на). Оплата производится по прейскуранту клиники, действующему на день оказания услуги.
+
+Указанная в этом документе стоимость сохраняется в течение трёх месяцев с даты составления плана.</textarea>
     </div>
     <div class="custom-service" style="display:flex; gap:8px;">
       <button class="btn btn-ghost btn-sm" style="flex:1;" onclick="resetAgreement()">Вернуть исходный</button>
@@ -2833,7 +2846,12 @@ async function renderPatients(){
   }
   const q = document.getElementById('patientSearch').value.trim().toLowerCase();
   const list = PATIENTS.filter(p => !q || p.name.toLowerCase().includes(q))
-                       .sort((a,b) => a.name.localeCompare(b.name, 'ru'));
+                       .sort((a,b) => {
+                         const ta = a.touchedAt || a.createdAt || '';
+                         const tb = b.touchedAt || b.createdAt || '';
+                         if(ta !== tb) return tb.localeCompare(ta);   // свежие сверху
+                         return a.name.localeCompare(b.name, 'ru');  // без отметки — по алфавиту
+                       });
   if(!list.length){
     el.innerHTML = `<div class="row-empty">${PATIENTS.length ? 'Никого не нашли по этому запросу.' : 'Пациентов пока нет. Добавь первого — и внутри него собирай планы лечения.'}</div>`;
     return;
@@ -2867,7 +2885,8 @@ async function createPatient(){
   if(!requireLicense()) return;
   const name = (prompt('ФИО пациента') || '').trim();
   if(!name) return;
-  const p = {id: genId('pt'), name, createdAt: new Date().toISOString()};
+  const now = new Date().toISOString();
+  const p = {id: genId('pt'), name, createdAt: now, touchedAt: now};
   PATIENTS.push(p);
   await savePatients();
   // Про копию напоминаем не в первый день, а когда уже есть что терять.
@@ -3029,6 +3048,15 @@ async function savePlan(opts){
   const list = existing.filter(e => e.id !== planId);
   list.unshift({id: planId, title: state.title, createdAt: state.createdAt, updatedAt: now, total: planTotal(state)});
   await savePlanIndex(pid, list);
+  const pt = patientById(pid);
+  if(pt){
+    const prev = String(pt.touchedAt || '');
+    pt.touchedAt = now;                                  // порядок в списке верен сразу
+    // На диск — не чаще раза в минуту: автосохранение срабатывает каждые полсекунды правки,
+    // и переписывать из-за этого весь список пациентов незачем. Отставание записи на минуту
+    // ничего не решает, а вот порядок на экране должен быть верным немедленно.
+    if(prev.slice(0, 16) !== now.slice(0, 16)) await savePatients();
+  }
   currentPlanStamps = {createdAt: state.createdAt, updatedAt: now};
   renderPlanMeta();
   if(!silent) flashSaved();
@@ -3994,8 +4022,11 @@ async function generatePDF(btn){
       pdf.addImage(durl, 'JPEG', 0, MARGIN, pageWidth, hPx / pxPerCss * ptPerCss);
     }
 
-    const name = document.getElementById('patientName').value.trim().replace(/[^a-zA-Zа-яА-Я0-9 ]/g,'') || 'plan';
-    const filename = `Plan_lecheniya_${name}.pdf`;
+    const full = document.getElementById('patientName').value.trim().replace(/[^a-zA-Zа-яА-ЯёЁ0-9 -]/g,'');
+    const surname = full.split(/\s+/)[0] || '';
+    const d = document.getElementById('planDate').value;           // YYYY-MM-DD
+    const dateStr = d ? d.split('-').reverse().join('.') : new Date().toLocaleDateString('ru-RU');
+    const filename = ['План', surname, dateStr].filter(Boolean).join(' ') + '.pdf';
     const blob = pdf.output('blob');
     // Each export used to leave its multi-megabyte blob alive for the life of the tab. Release the
     // previous one now that a new link replaces it; the current URL has to stay until then, because
@@ -4449,3 +4480,15 @@ function(t){t.__bidiEngine__=t.prototype.__bidiEngine__=function(t){var r,n,i,a,
   пустого ключа не осталось ок
   приватного ключа в файле нет ок
   результат                       0 байт
+  текст согласия заменён ок
+  имя PDF-файла                      ок
+  старого текста не осталось ок
+  старого имени файла не осталось ок
+  убранной фразы нет         ок
+  результат                         0 байт
+  в карточке — только пациенты ок
+  служебная строка над списком ок
+  стиль служебной строки     ок
+  служебное идёт ДО списка пациентов ок
+  кнопка добавления осталась у списка ок
+  результат                             0 байт
