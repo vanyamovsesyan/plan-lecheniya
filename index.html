@@ -138,6 +138,8 @@
   }
   .btn-primary{background:var(--blue); color:#fff;}
   .btn-primary:hover{background:var(--blue-deep);}
+  /* План пишется сам, кнопка зеленеет на пару секунд. */
+  .btn-primary.saved-ok, .btn-primary.saved-ok:hover{background:var(--green);}
   .btn-ghost{background:var(--blue-mist); color:var(--blue-deep);}
   .btn-ghost:hover{background:#dbe6ff;}
   .btn-line{background:#fff; border:1.4px solid var(--line); color:var(--ink-soft);}
@@ -237,6 +239,11 @@
     display:block; margin-top:8px; background:var(--green); color:#fff; text-decoration:none;
     padding:10px; border-radius:9px; font-weight:700; font-size:13.5px;
   }
+  #pdfResult #pdfShare{
+    display:block; width:100%; margin-top:8px; background:var(--blue); color:#fff;
+    padding:11px; border-radius:9px; font-weight:800; font-size:14px; justify-content:center;
+  }
+  #pdfResult #pdfShare:hover{background:var(--blue-deep);}
   #pdfResult .hint{font-size:11px; color:var(--ink-soft); margin-top:4px;}
 
   .agreement{font-size:12px; color:var(--ink-soft); line-height:1.5;}
@@ -393,10 +400,6 @@
     font-size:11px; font-weight:700; letter-spacing:.04em;
     padding:3px 9px; border-radius:999px; margin-bottom:10px;
   }
-  #coachTip .step{
-    font-size:11px; font-weight:700; letter-spacing:.1em; text-transform:uppercase;
-    color:var(--ink-soft); margin-bottom:6px;
-  }
   #coachTip h4{font-family:'Manrope',sans-serif; font-size:16.5px; font-weight:800; margin:0 0 6px;}
   #coachTip p{margin:0; font-size:14px; line-height:1.5; color:var(--ink-soft);}
   #coachTip .foot{display:flex; gap:8px; align-items:center; margin-top:14px;}
@@ -508,7 +511,7 @@
       </div>
     </div>
     <div class="chart-actions">
-      <button class="btn btn-primary btn-sm" onclick="savePlan()">💾 Сохранить план</button>
+      <button class="btn btn-primary btn-sm" id="btnSavePlan" onclick="savePlan()">💾 Сохранить план</button>
       <button class="btn btn-line btn-sm" id="btnServices" onclick="openSettings()">⚙️ Услуги и базовые цены</button>
       <span class="chip-readout" id="planMeta">Ещё не сохранён</span>
     </div>
@@ -641,6 +644,7 @@
     <button class="btn btn-primary" onclick="generatePDF(this)">📄 Сформировать PDF</button>
   </div>
   <div id="pdfResult">
+    <button id="pdfShare" class="btn" style="display:none;" onclick="sharePdf(this)">📤 Отправить пациенту</button>
     <a id="pdfLink" href="#" target="_blank" download="plan.pdf">📥 Открыть / скачать PDF</a>
     <div class="hint">Если PDF не открылся сам — нажми сюда</div>
   </div>
@@ -736,7 +740,6 @@
   <div id="coachHole"></div>
   <div id="coachTip">
     <div class="badge">🎓 Обучение</div>
-    <div class="step" id="coachStep"></div>
     <h4 id="coachTitle"></h4>
     <p id="coachText"></p>
     <div class="foot">
@@ -3000,6 +3003,17 @@ async function savePlan(opts){
   await savePlanIndex(pid, list);
   currentPlanStamps = {createdAt: state.createdAt, updatedAt: now};
   renderPlanMeta();
+  if(!silent) flashSaved();
+}
+let savedFlashTimer = null;
+function flashSaved(){
+  const b = document.getElementById('btnSavePlan');
+  if(!b) return;
+  if(!b.dataset.label) b.dataset.label = b.textContent;
+  b.textContent = '✓ План сохранён';
+  b.classList.add('saved-ok');
+  clearTimeout(savedFlashTimer);
+  savedFlashTimer = setTimeout(() => { b.textContent = b.dataset.label; b.classList.remove('saved-ok'); }, 2000);
 }
 async function loadPlan(id){
   const state = await storageGet('plan:' + id);
@@ -3503,9 +3517,6 @@ function coachRefresh(){
   hole.style.left   = (r.left - pad) + 'px';
   hole.style.width  = (r.width + pad*2) + 'px';
   hole.style.height = (r.height + pad*2) + 'px';
-  // Номер берём от ПОКАЗАННОГО шага: coachIdx мог остаться позади, если шаги пропущены из-за
-  // отсутствия их кнопок на этом экране, и счётчик врал («шаг 2» при содержимом восьмого).
-  document.getElementById('coachStep').textContent = 'Шаг ' + (coachShown+1) + ' из ' + COACH.length;
   document.getElementById('coachTitle').textContent = step.title;
   document.getElementById('coachText').textContent = step.text;
   const next = document.getElementById('coachNext');
@@ -3623,12 +3634,12 @@ addStage();
   await coachInit();
   await loadPatients();
   await migratePlansToPatients();
-  await showPatients();
   // Первый запуск — одна карточка, а не шестиэкранная инструкция. Полная инструкция живёт
   // за кнопкой ❔ для тех, кто хочет прочитать всё сразу.
   if(storageAvailable() && !(await storageGet(ONBOARD_KEY))){
     document.getElementById('welcomeBackdrop').classList.add('open');
   }
+  await showPatients();
 })();
 
 /* ---------- PDF generation ---------- */
@@ -3843,6 +3854,28 @@ function printPageCuts(sheet, usableCss, totalCss){
   return cuts;
 }
 let lastPdfUrl = null;
+let lastPdfFile = null;
+function offerPdfShare(blob, filename){
+  const btn = document.getElementById('pdfShare');
+  if(!btn) return;
+  lastPdfFile = null;
+  btn.style.display = 'none';
+  try{
+    const file = new File([blob], filename, {type:'application/pdf'});
+    if(navigator.canShare && navigator.canShare({files:[file]})){ lastPdfFile = file; btn.style.display = 'block'; }
+  }catch(e){}
+}
+async function sharePdf(btn){
+  if(!lastPdfFile) return;
+  const orig = btn.textContent;
+  try{
+    await navigator.share({files:[lastPdfFile], title:'План лечения'});
+  }catch(e){
+    if(e && e.name === 'AbortError') return;
+    btn.textContent = 'Не получилось — скачай файл ниже';
+    setTimeout(() => { btn.textContent = orig; }, 2500);
+  }
+}
 async function generatePDF(btn){
   btn = btn || document.querySelector('#bottomBar .btn-primary');
   const origText = btn ? btn.textContent : '';
@@ -3926,6 +3959,7 @@ async function generatePDF(btn){
     link.href = url;
     link.download = filename;
     document.getElementById('pdfResult').style.display = 'block';
+    offerPdfShare(blob, filename);
     showTip('pdfcode', 'У документа есть код',
       'Он виден в редакторе рядом с датами и считается по содержанию плана. Если в присланной копии поменяют сумму, код не сойдётся. На странице PDF его нет — он лежит в свойствах файла.');
   } catch(e){
