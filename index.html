@@ -3661,7 +3661,7 @@ function openOnboarding(step){
   renderOnboarding();
   document.getElementById('onboard').classList.add('open'); coachRefresh();
 }
-const APP_VERSION = '1.1';   // видно в инструкции — чтобы понимать, что стоит на телефоне
+const APP_VERSION = '1.2';   // видно в инструкции — чтобы понимать, что стоит на телефоне
 function renderOnboarding(){
   document.getElementById('obVersion').textContent = 'Версия ' + APP_VERSION;
   const s = ONBOARD_STEPS[obStep];
