@@ -448,8 +448,7 @@
       <button class="btn btn-primary btn-sm" id="btnAddPatient" onclick="createPatient()">+ Добавить пациента</button>
       <button class="btn btn-line btn-sm" id="btnServices" onclick="openSettings()">⚙️ Услуги и базовые цены</button>
       <button class="btn btn-line btn-sm" onclick="openBackup()">💾 Резервная копия</button>
-      <button class="btn btn-line btn-sm" onclick="openOnboarding(0)">❔ Инструкция</button>
-      <button class="btn btn-line btn-sm" onclick="restartCoach()">🎓 Обучение</button>
+      <button class="btn btn-line btn-sm" id="btnHelp" onclick="openHelp()">❔ Помощь</button>
     </div>
     <div id="patientsList" style="margin-top:6px;"></div>
   </div>
@@ -652,6 +651,28 @@
       <button class="btn btn-ghost btn-sm" style="flex:1;" onclick="closePreview()">Закрыть</button>
       <button class="btn btn-primary btn-sm" id="previewShare" style="flex:2;" onclick="sharePdf(this)">📤 Отправить пациенту</button>
       <a class="btn btn-primary btn-sm" id="previewDownload" style="flex:2; display:none; justify-content:center; text-decoration:none;" href="#" download="plan.pdf">📥 Скачать PDF</a>
+    </div>
+  </div>
+</div>
+
+<!-- Помощь: инструкция, подсказки и связь с разработчиком в одном месте, чтобы не
+     держать на главном экране три отдельные кнопки. -->
+<div class="modal-backdrop" id="helpBackdrop">
+  <div class="modal">
+    <div class="modal-head">
+      <h3>Помощь</h3>
+      <button class="icon-btn" onclick="closeHelp()">✕</button>
+    </div>
+    <div class="ns-body">
+      <button class="btn btn-line" style="justify-content:flex-start;" onclick="helpOpenInstruction()">📖 Инструкция</button>
+      <button class="btn btn-line" style="justify-content:flex-start;" onclick="helpOpenCoach()">🎓 Показать подсказки по кнопкам</button>
+      <a class="btn btn-line" style="justify-content:flex-start; text-decoration:none;" id="helpWrite"
+         href="https://t.me/Dr_movsesyan" target="_blank" rel="noopener" onclick="copySupportInfo()">✉️ Написать разработчику</a>
+      <div class="ns-hint">Откроется Telegram. Сведения о версии и устройстве кладутся в буфер обмена — вставьте их в сообщение, так быстрее понять, что происходит.</div>
+      <div class="ns-hint" id="helpCopied" style="display:none; color:var(--green); font-weight:700;">✓ Скопировано — вставьте в чат</div>
+    </div>
+    <div class="custom-service" style="text-align:center;">
+      <span class="ob-version" id="helpVersion" style="margin:0;"></span>
     </div>
   </div>
 </div>
@@ -2596,7 +2617,7 @@ const LICENSE = {
   // только триал, а любой токен отвергается. Сгенерируй пару в generator-litsenziy.html и вставь
   // сюда публичную половину. ПРИВАТНЫЙ КЛЮЧ СЮДА НЕ КЛАДЁТСЯ НИКОГДА — с ним любой напечатает
   // себе подписку.
-  publicKey: '',
+  publicKey: 'MFkwEwYHKoZIzj0CAQYIKoZIzj0DAQcDQgAEXLEWeSXntNx2EINK0GbOyFI476I6sV1s36qlFqCKuoIDGbMhp222adgSc4sY2eHyoBKu229rKgqu+DR5S+B9qw==',
   trialPatients: 10,
   trialPlans: 20,
   graceDays: 14,      // сколько работать после истечения, если продлить не успели или нет сети
@@ -3587,6 +3608,26 @@ const ONBOARD_STEPS = [
          <p style="margin-top:8px">Обратная сторона: раз копии нигде нет, восстановить её неоткуда. Планы исчезнут, если удалить приложение или очистить его данные. Готовый PDF сохраняй отдельно — он остаётся у тебя в файлах.</p></div>`},
 ];
 let obStep = 0;
+const SUPPORT_TG = 'Dr_movsesyan';
+function openHelp(){
+  document.getElementById('helpVersion').textContent = 'Версия ' + APP_VERSION;
+  document.getElementById('helpCopied').style.display = 'none';
+  document.getElementById('helpBackdrop').classList.add('open'); coachRefresh();
+}
+function closeHelp(){
+  document.getElementById('helpBackdrop').classList.remove('open'); coachRefresh();
+}
+function helpOpenInstruction(){ closeHelp(); openOnboarding(0); }
+function helpOpenCoach(){ closeHelp(); restartCoach(); }
+// Подставить текст в чат с человеком ссылкой нельзя — Telegram разрешает это только ботам.
+// Поэтому кладём сведения в буфер: врачу останется одна вставка, а нам не придётся
+// выяснять по переписке, какая у него версия и какой телефон.
+function copySupportInfo(){
+  const info = 'План лечения, версия ' + APP_VERSION + '\n' + navigator.userAgent;
+  try{ navigator.clipboard.writeText(info); }catch(e){}
+  const hint = document.getElementById('helpCopied');
+  if(hint) hint.style.display = 'block';
+}
 function openOnboarding(step){
   obStep = step || 0;
   renderOnboarding();
@@ -4403,3 +4444,8 @@ function(t){t.__bidiEngine__=t.prototype.__bidiEngine__=function(t){var r,n,i,a,
 </script>
 </body>
 </html>
+  публичный ключ вставлен ок
+  ключ в файле ровно один раз ок
+  пустого ключа не осталось ок
+  приватного ключа в файле нет ок
+  результат                       0 байт
