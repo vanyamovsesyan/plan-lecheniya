@@ -234,17 +234,10 @@
   .bottom-bar .btn{flex:1; max-width:340px; justify-content:center; padding:12px; font-size:14.5px;}
   .bottom-bar{flex-direction:column; align-items:center;}
   .bottom-bar .row{display:flex; gap:10px; width:100%; justify-content:center;}
-  #pdfResult{display:none; width:100%; max-width:340px; text-align:center;}
-  #pdfResult a{
-    display:block; margin-top:8px; background:var(--green); color:#fff; text-decoration:none;
-    padding:10px; border-radius:9px; font-weight:700; font-size:13.5px;
-  }
-  #pdfResult #pdfShare{
-    display:block; width:100%; margin-top:8px; background:var(--blue); color:#fff;
-    padding:11px; border-radius:9px; font-weight:800; font-size:14px; justify-content:center;
-  }
-  #pdfResult #pdfShare:hover{background:var(--blue-deep);}
-  #pdfResult .hint{font-size:11px; color:var(--ink-soft); margin-top:4px;}
+
+  /* Страницы готового документа — те же картинки, что уходят в PDF. */
+  #previewPages img{display:block; width:100%; border-radius:4px; box-shadow:0 2px 10px rgba(18,33,59,.16);}
+  .ob-version{font-size:11px; color:var(--ink-soft); text-align:center; margin-top:10px;}
 
   .agreement{font-size:12px; color:var(--ink-soft); line-height:1.5;}
   .agreement textarea{width:100%; min-height:110px; font-family:'Inter',sans-serif; font-size:12px; color:var(--ink-soft); border:1.4px solid var(--line); border-radius:9px; padding:10px; line-height:1.5;}
@@ -643,10 +636,23 @@
   <div class="row">
     <button class="btn btn-primary" onclick="generatePDF(this)">📄 Сформировать PDF</button>
   </div>
-  <div id="pdfResult">
-    <button id="pdfShare" class="btn" style="display:none;" onclick="sharePdf(this)">📤 Отправить пациенту</button>
-    <a id="pdfLink" href="#" target="_blank" download="plan.pdf">📥 Открыть / скачать PDF</a>
-    <div class="hint">Если PDF не открылся сам — нажми сюда</div>
+</div>
+
+<!-- Готовый документ показывается ЗДЕСЬ, а не в отдельной вкладке. В чужой вкладке
+     единственная заметная кнопка «поделиться» — Safari-евская, а она отдаёт адрес blob:,
+     то есть мёртвую ссылку. Свой просмотр = своя кнопка рядом с документом. -->
+<div class="modal-backdrop" id="previewBackdrop">
+  <div class="modal">
+    <div class="modal-head">
+      <h3>Так увидит пациент</h3>
+      <button class="icon-btn" onclick="closePreview()">✕</button>
+    </div>
+    <div class="ns-body" id="previewPages" style="padding:12px; gap:10px; background:#eef1f6;"></div>
+    <div class="custom-service" style="display:flex; gap:8px;">
+      <button class="btn btn-ghost btn-sm" style="flex:1;" onclick="closePreview()">Закрыть</button>
+      <button class="btn btn-primary btn-sm" id="previewShare" style="flex:2;" onclick="sharePdf(this)">📤 Отправить пациенту</button>
+      <a class="btn btn-primary btn-sm" id="previewDownload" style="flex:2; display:none; justify-content:center; text-decoration:none;" href="#" download="plan.pdf">📥 Скачать PDF</a>
+    </div>
   </div>
 </div>
 
@@ -757,6 +763,7 @@
     <h3 id="obTitle"></h3>
     <div id="obBody"></div>
     <div class="dots" id="obDots"></div>
+    <div class="ob-version" id="obVersion"></div>
     <div class="ob-foot">
       <button class="btn btn-ghost btn-sm" onclick="closeOnboarding()" id="obSkip">Пропустить</button>
       <button class="btn btn-primary btn-sm" onclick="obNext()" id="obNext">Далее</button>
@@ -3585,19 +3592,20 @@ function openOnboarding(step){
   renderOnboarding();
   document.getElementById('onboard').classList.add('open'); coachRefresh();
 }
+const APP_VERSION = '1.1';   // видно в инструкции — чтобы понимать, что стоит на телефоне
 function renderOnboarding(){
+  document.getElementById('obVersion').textContent = 'Версия ' + APP_VERSION;
   const s = ONBOARD_STEPS[obStep];
   document.getElementById('obIco').textContent = s.ico;
   document.getElementById('obTitle').textContent = s.title;
   document.getElementById('obBody').innerHTML = s.body;
   document.getElementById('obDots').innerHTML = ONBOARD_STEPS.map((_,i) => `<i class="${i===obStep?'on':''}"></i>`).join('');
   const last = obStep === ONBOARD_STEPS.length - 1;
-  document.getElementById('obNext').textContent = last ? 'Начать' : 'Далее';
+  document.getElementById('obNext').textContent = last ? 'Понятно' : 'Далее';
   document.getElementById('obSkip').style.visibility = last ? 'hidden' : '';
 }
 function obNext(){
   if(obStep < ONBOARD_STEPS.length - 1){ obStep++; renderOnboarding(); return; }
-  restartCoach();
   closeOnboarding();
 }
 function closeOnboarding(){
@@ -3856,14 +3864,27 @@ function printPageCuts(sheet, usableCss, totalCss){
 let lastPdfUrl = null;
 let lastPdfFile = null;
 function offerPdfShare(blob, filename){
-  const btn = document.getElementById('pdfShare');
-  if(!btn) return;
   lastPdfFile = null;
-  btn.style.display = 'none';
   try{
     const file = new File([blob], filename, {type:'application/pdf'});
-    if(navigator.canShare && navigator.canShare({files:[file]})){ lastPdfFile = file; btn.style.display = 'block'; }
-  }catch(e){}
+    if(navigator.canShare && navigator.canShare({files:[file]})) lastPdfFile = file;
+  }catch(e){ /* браузер не умеет File или делиться файлами — остаётся скачивание */ }
+}
+function showPreview(pages, url, filename){
+  document.getElementById('previewPages').innerHTML =
+    pages.map(src => `<img src="${src}" alt="Страница документа">`).join('');
+  // Отправка файлом есть не везде: на компьютере системного листа нет, там оставляем скачивание.
+  const dl = document.getElementById('previewDownload');
+  dl.href = url; dl.download = filename;
+  const canShare = !!lastPdfFile;
+  document.getElementById('previewShare').style.display = canShare ? '' : 'none';
+  dl.style.display = canShare ? 'none' : '';
+  document.getElementById('previewBackdrop').classList.add('open');
+  coachRefresh();
+}
+function closePreview(){
+  document.getElementById('previewBackdrop').classList.remove('open');
+  coachRefresh();
 }
 async function sharePdf(btn){
   if(!lastPdfFile) return;
@@ -3880,15 +3901,6 @@ async function generatePDF(btn){
   btn = btn || document.querySelector('#bottomBar .btn-primary');
   const origText = btn ? btn.textContent : '';
   if(btn){ btn.textContent = 'Формирую…'; btn.disabled = true; }
-  document.getElementById('pdfResult').style.display = 'none';
-
-  // Reserve a tab synchronously (within the click gesture) so mobile Safari/Chrome
-  // don't block it once we fill it in after the async PDF build finishes.
-  let reservedTab = null;
-  try{ reservedTab = window.open('', '_blank'); }catch(e){ reservedTab = null; }
-  if(reservedTab){
-    try{ reservedTab.document.write('<p style="font-family:sans-serif;padding:20px;">Формирую PDF…</p>'); }catch(e){}
-  }
 
   try{
     await ensurePdfLibs();
@@ -3921,6 +3933,7 @@ async function generatePDF(btn){
     const usableCss = (pageHeight - MARGIN*2) / ptPerCss;
     const totalCss = canvas.height / pxPerCss;
     const cuts = printPageCuts(sheet, usableCss, totalCss);
+    const pageImgs = [];   // те же срезы, что уходят в PDF — их и показываем врачу
     for(let i = 0; i < cuts.length - 1; i++){
       const fromPx = Math.round(cuts[i] * pxPerCss);
       const hPx = Math.round((cuts[i+1] - cuts[i]) * pxPerCss);
@@ -3935,7 +3948,9 @@ async function generatePDF(btn){
       // JPEG, не PNG: jsPDF не сжимает PNG и раздувает страницу с 289 КБ до 11 МБ. Такой файл
       // не отправишь в WhatsApp, а это основной способ отдать план пациенту. Качество 0.92 —
       // текст таблиц и цифры остаются чистыми, замерено на реальном листе.
-      pdf.addImage(slice.toDataURL('image/jpeg', 0.92), 'JPEG', 0, MARGIN, pageWidth, hPx / pxPerCss * ptPerCss);
+      const durl = slice.toDataURL('image/jpeg', 0.92);
+      pageImgs.push(durl);
+      pdf.addImage(durl, 'JPEG', 0, MARGIN, pageWidth, hPx / pxPerCss * ptPerCss);
     }
 
     const name = document.getElementById('patientName').value.trim().replace(/[^a-zA-Zа-яА-Я0-9 ]/g,'') || 'plan';
@@ -3948,22 +3963,11 @@ async function generatePDF(btn){
     const url = URL.createObjectURL(blob);
     lastPdfUrl = url;
 
-    // Try to fill the reserved tab (works even after the async delay, since the tab already exists)
-    if(reservedTab && !reservedTab.closed){
-      try{ reservedTab.location.href = url; }catch(e){}
-    }
-
-    // Always show a manual fallback link — this is the most reliable path on mobile,
-    // since a real tap on it is a fresh user gesture.
-    const link = document.getElementById('pdfLink');
-    link.href = url;
-    link.download = filename;
-    document.getElementById('pdfResult').style.display = 'block';
     offerPdfShare(blob, filename);
+    showPreview(pageImgs, url, filename);
     showTip('pdfcode', 'У документа есть код',
       'Он виден в редакторе рядом с датами и считается по содержанию плана. Если в присланной копии поменяют сумму, код не сойдётся. На странице PDF его нет — он лежит в свойствах файла.');
   } catch(e){
-    if(reservedTab && !reservedTab.closed) reservedTab.close();
     alert('Не удалось сформировать PDF: ' + e.message);
   } finally {
     // The offscreen sheet is a full second copy of the chart (32 teeth of SVG) plus every table;
