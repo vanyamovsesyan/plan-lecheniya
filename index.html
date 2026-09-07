@@ -700,6 +700,14 @@
     <div class="ns-body">
       <div id="licenseStatusBox"></div>
       <div class="field">
+        <label>Номер этого устройства</label>
+        <div style="display:flex; gap:8px; align-items:center; flex-wrap:wrap;">
+          <code id="installIdBox" style="font-family:ui-monospace,monospace; font-size:16px; font-weight:700; letter-spacing:.06em; background:var(--paper); border:1px solid var(--line); border-radius:9px; padding:8px 12px;">&mdash;</code>
+          <button class="btn btn-line btn-sm" id="installIdCopy" onclick="copyInstallId(this)">Скопировать</button>
+        </div>
+        <div class="ns-hint">Отправьте этот номер, когда просите код. Код, выпущенный под него, на чужом телефоне не заработает.</div>
+      </div>
+      <div class="field">
         <label for="licenseInput">Код подписки</label>
         <textarea id="licenseInput" rows="4" placeholder="Вставь сюда строку, которую тебе прислали"
                   style="width:100%; font-family:'IBM Plex Mono',ui-monospace,monospace; font-size:12px; line-height:1.5; padding:10px; border:1px solid var(--line); border-radius:10px; background:var(--paper); color:var(--ink); resize:vertical;"></textarea>
@@ -2635,6 +2643,28 @@ const LICENSE = {
   trialPlans: 20,
   graceDays: 14,      // сколько работать после истечения, если продлить не успели или нет сети
 };
+const INSTALL_ID_KEY = 'install-id-v1';
+// Буквы и цифры, которые не путают при переписывании от руки: без 0/O и 1/I/L.
+const ID_ALPHABET = '23456789ABCDEFGHJKMNPQRSTUVWXYZ';
+let installId = '';
+function makeInstallId(){
+  const b = crypto.getRandomValues(new Uint8Array(8));
+  let s = '';
+  for(let i = 0; i < 8; i++) s += ID_ALPHABET[b[i] % ID_ALPHABET.length];
+  return s.slice(0, 4) + '-' + s.slice(4);
+}
+// Номер придумывается один раз и живёт в хранилище рядом с планами. Чистка данных браузера
+// его унесёт — тогда врачу понадобится новый код. Это осознанная плата за то, что сервера,
+// который помнил бы устройства, у приложения нет.
+async function initInstallId(){
+  if(!storageAvailable()) return;
+  let id = await storageGet(INSTALL_ID_KEY);
+  if(typeof id !== 'string' || !/^[0-9A-Z]{4}-[0-9A-Z]{4}$/.test(id)){
+    id = makeInstallId();
+    await storageSet(INSTALL_ID_KEY, id);
+  }
+  installId = id;
+}
 const LICENSE_TOKEN_KEY = 'license-token-v1';
 const USAGE_KEY = 'usage-counters-v1';
 
@@ -2658,6 +2688,9 @@ async function verifyLicenseToken(token){
     if(!okSig) return null;
     const payload = JSON.parse(new TextDecoder().decode(b64ToBytes(body)));
     if(!payload || !payload.u) return null;
+    // Код может быть выпущен под конкретное устройство. У выданных раньше поля d нет —
+    // они принимаются как прежде, иначе у оплативших коллег всё разом перестало бы работать.
+    if(payload.d && payload.d !== installId) return null;
     return payload;
   }catch(e){ return null; }
 }
@@ -3372,7 +3405,14 @@ function licenseSummary(){
   if(st.mode === 'grace')  return {text:`Подписка истекла, осталось ${st.daysLeft} дн. на продление`, tone:'warn'};
   return {text: st.reason === 'trial' ? 'Пробный период закончился' : 'Подписка закончилась', tone:'bad'};
 }
+function copyInstallId(btn){
+  const orig = btn.textContent;
+  try{ navigator.clipboard.writeText(installId); }catch(e){}
+  btn.textContent = 'Скопировано';
+  setTimeout(() => { btn.textContent = orig; }, 2000);
+}
 function openLicenseDialog(){
+  document.getElementById('installIdBox').textContent = installId || 'недоступен';
   renderLicenseStatusBox();
   document.getElementById('licenseResult').textContent = '';
   document.getElementById('licenseBackdrop').classList.add('open'); coachRefresh();
@@ -3393,6 +3433,13 @@ function renderLicenseStatusBox(){
      </div>`;
 }
 function closeLicenseDialog(){ document.getElementById('licenseBackdrop').classList.remove('open'); coachRefresh(); }
+function peekTokenDevice(token){
+  try{
+    const body = String(token).trim().split('.')[0];
+    const p = JSON.parse(new TextDecoder().decode(b64ToBytes(body)));
+    return (p && typeof p.d === 'string') ? p.d : '';
+  }catch(e){ return ''; }
+}
 async function submitLicenseToken(){
   const raw = document.getElementById('licenseInput').value.trim();
   const out = document.getElementById('licenseResult');
@@ -3409,8 +3456,11 @@ async function submitLicenseToken(){
     renderLicenseStrip();
     renderLicenseStatusBox();   // обновляем состояние, но НЕ стираем сообщение выше
   } else {
+    const forDevice = peekTokenDevice(raw);
     out.style.color = 'var(--red)';
-    out.textContent = 'Код не подошёл. Проверь, что скопирована строка целиком, без переносов и лишних пробелов.';
+    out.textContent = (forDevice && forDevice !== installId)
+      ? 'Этот код выпущен для другого устройства (' + forDevice + '), а у вас ' + installId + '. Попросите код на ваш номер.'
+      : 'Код не подошёл. Проверь, что скопирована строка целиком, без переносов и лишних пробелов.';
   }
 }
 // Полоска состояния на экране пациентов — единственное постоянное напоминание. Ненавязчивое, пока
@@ -3661,7 +3711,7 @@ function openOnboarding(step){
   renderOnboarding();
   document.getElementById('onboard').classList.add('open'); coachRefresh();
 }
-const APP_VERSION = "1.4";   // видно в инструкции — чтобы понимать, что стоит на телефоне
+const APP_VERSION = "1.5";   // видно в инструкции — чтобы понимать, что стоит на телефоне
 function renderOnboarding(){
   document.getElementById('obVersion').textContent = 'Версия ' + APP_VERSION;
   const s = ONBOARD_STEPS[obStep];
@@ -3707,6 +3757,7 @@ addStage();
   await initTips();
   await initMarkColors();
   renderChart();                 // repaint with the user's saved symbol colours
+  await initInstallId();
   await initLicense();
   await coachInit();
   await loadPatients();
