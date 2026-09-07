@@ -897,7 +897,7 @@ const LOWER = [48,47,46,45,44,43,42,41,31,32,33,34,35,36,37,38];
 const selectedTeeth = new Set(); // teeth currently tapped/selected, to attach to next service
 
 function toDot(n){ const s = String(n); return s[0] + '.' + s[1]; }
-function fromDot(s){ return s.replace('.', '); }
+function fromDot(s){ return s.replace('.', ''); }
 function parseTeethField(str){
   if(!str) return [];
   return str.split(',').map(x => fromDot(x.trim())).filter(Boolean);
@@ -1456,7 +1456,7 @@ function deleteCatalogService(cat, idx){
   // the service, and a mis-tap on a phone silently deleted a line from a 100-service price list
   // that has no undo and no backup.
   const s = SERVICES[cat][idx];
-  if(!confirm(`Удалить услугу «${s ? s.name : '}» из списка?`)) return;
+  if(!confirm(`Удалить услугу «${s ? s.name : ''}» из списка?`)) return;
   SERVICES[cat].splice(idx, 1);
   storageSet(catalogKey(), SERVICES);
   renderServiceList();
@@ -1474,8 +1474,8 @@ function closeSettings(){ document.getElementById('settingsBackdrop').classList.
 function setSettingsTab(cat){ settingsTab = cat; renderSettingsTabs(); renderSettingsList(); }
 function renderSettingsTabs(){
   document.getElementById('settingsTabs').innerHTML = Object.keys(SERVICES).map(cat =>
-    `<div class="tab ${cat===settingsTab?'active':'}" onclick="setSettingsTab('${cat}')">${cat}</div>`
-  ).join(');
+    `<div class="tab ${cat===settingsTab?'active':''}" onclick="setSettingsTab('${cat}')">${cat}</div>`
+  ).join('');
 }
 function renderSettingsList(){
   const q = document.getElementById('settingsSearch').value;
@@ -1497,7 +1497,7 @@ function renderSettingsList(){
     <div class="service-item" style="flex-direction:column; align-items:stretch; gap:8px;">
       <div style="display:flex; justify-content:space-between; align-items:center; gap:8px;">
         <span class="s-name" style="flex:1;">${esc(s.name)}</span>
-        ${searching ? `<span class="s-cat">${esc(cat.replace('Для ','))}</span>` : '}
+        ${searching ? `<span class="s-cat">${esc(cat.replace('Для ',''))}</span>` : ''}
         <input type="number" class="num-input" style="width:88px;" value="${s.price}" onchange="updateCatalogPrice('${cat}', ${i}, this.value)">
         <button class="icon-btn" onclick="deleteCatalogServiceFromSettings('${cat}', ${i})">🗑</button>
       </div>
@@ -1507,7 +1507,7 @@ function renderSettingsList(){
         <span style="color:var(--blue); font-weight:600;">Изменить</span>
       </button>
     </div>`;
-  }).join(');
+  }).join('');
 }
 // Какой символ реально нарисуется у этой услуги: явно выбранный, либо угаданный по названию.
 function markTypeOf(s){
@@ -1551,7 +1551,7 @@ function renderIconPicker(){
   // Превью на моляре: на нём видно и несколько каналов, и как коронка садится на зуб.
   const mark = type ? {type, surfaces: 2, canals: 3} : null;
   const anat = mark && ANATOMICAL_MARK_TYPES.has(mark.type);
-  const overlay = mark && !anat ? markIconHtml(mark) : ';
+  const overlay = mark && !anat ? markIconHtml(mark) : '';
   const svg = toothSvgMarkup('molar', TOOTH_DIMS.molar.w * 1.6, TOOTH_DIMS.molar.h * 1.6, '#9fb0cc',
                              anat ? withImpliedMarks([mark]) : []);
   document.getElementById('ipPreview').innerHTML =
@@ -1566,7 +1566,7 @@ function renderIconPicker(){
       : iconChipHtml(opt.key, 24);
     return `<button class="btn ${key===opt.key?'btn-primary':'btn-line'} btn-sm" style="padding:3px 5px;"
                     onclick="setCatalogIcon('${ipCat}', ${ipIdx}, '${opt.key}')" title="${opt.label}">${content}</button>`;
-  }).join(');
+  }).join('');
 
   // Цвет — свойство СИМВОЛА, а не этой услуги: меняя его здесь, врач перекрашивает все услуги
   // с тем же символом. Сказано прямо, чтобы это не выглядело сюрпризом.
@@ -1575,9 +1575,9 @@ function renderIconPicker(){
       <span style="font-size:13px; font-weight:600;">Цвет символа</span>
       <input type="color" value="${markColor(type)}" style="width:40px; height:28px; padding:0; border:1px solid var(--line); border-radius:8px; background:#fff;"
              onchange="setMarkColor('${type}', this.value); renderIconPicker();">
-      ${MARK_COLORS[type] ? `<button class="btn btn-line btn-sm" onclick="resetMarkColor('${type}'); renderIconPicker();">Сбросить</button>` : '}
+      ${MARK_COLORS[type] ? `<button class="btn btn-line btn-sm" onclick="resetMarkColor('${type}'); renderIconPicker();">Сбросить</button>` : ''}
       <span style="font-size:11px; color:var(--ink-soft); flex-basis:100%;">Действует на все услуги с этим символом, а не только на эту.</span>
-    </div>` : ';
+    </div>` : '';
 }
 function setCatalogIcon(cat, idx, iconKey){
   SERVICES[cat][idx].icon = iconKey;
@@ -1591,7 +1591,7 @@ function updateCatalogPrice(cat, idx, val){
 }
 function deleteCatalogServiceFromSettings(cat, idx){
   const s = SERVICES[cat][idx];
-  if(!confirm(`Удалить услугу «${s ? s.name : '}» из списка?`)) return;
+  if(!confirm(`Удалить услугу «${s ? s.name : ''}» из списка?`)) return;
   SERVICES[cat].splice(idx, 1);
   storageSet(catalogKey(), SERVICES);
   renderSettingsList();
@@ -1669,7 +1669,7 @@ function toothLevels(type, vy, vh){
   };
 }
 function anatomyGuidesMarkup(type, vy, vh, vw){
-  if(!SHOW_ANATOMY_GUIDES) return ';
+  if(!SHOW_ANATOMY_GUIDES) return '';
   const L = toothLevels(type, vy, vh);
   const line = (y, c) => `<line x1="${(-vw*0.3).toFixed(1)}" y1="${y.toFixed(1)}" x2="${(vw*1.3).toFixed(1)}" y2="${y.toFixed(1)}" stroke="${c}" stroke-width="${(vh*0.005).toFixed(2)}" stroke-dasharray="${(vh*0.018).toFixed(1)} ${(vh*0.014).toFixed(1)}"/>`;
   return line(L.gumY, '#e0632f') + line(L.boneY, '#b8860b');
@@ -1714,8 +1714,8 @@ function contourCapMarkup(t, color, topY, sideBottomY, dipY, strokeFrac, solid){
     `Q9999,${f(dipY)} ${f(cx)},${f(dipY)} Q-9999,${f(dipY)} -9999,${f(sideBottomY)} Z`;
   const sw = Math.max(vw*strokeFrac, 1.8);
   const strokedPaths = solid
-    ? t.paths.map(d => `<path d="${d}" fill="${color}"/>`).join(')
-    : t.paths.map(d => `<path d="${d}" fill="none" stroke="${color}" stroke-width="${sw.toFixed(2)}" stroke-linejoin="round"/>`).join(');
+    ? t.paths.map(d => `<path d="${d}" fill="${color}"/>`).join('')
+    : t.paths.map(d => `<path d="${d}" fill="none" stroke="${color}" stroke-width="${sw.toFixed(2)}" stroke-linejoin="round"/>`).join('');
   return `<defs><clipPath id="${zoneClipId}"><path d="${zonePath}"/></clipPath></defs><g clip-path="url(#${zoneClipId})">${strokedPaths}</g>`;
 }
 
@@ -1934,7 +1934,7 @@ function toothMarkSvgContent(type, mark, ctx){
     // The periodontal space on a natural tooth: a white outline of the tooth laid over the graft so
     // the bone never touches the root surface.
     const gapW = vw*0.14;
-    const gap = t.paths.map(d => `<path d="${d}" fill="#fff" stroke="#fff" stroke-width="${gapW.toFixed(2)}" stroke-linejoin="round"/>`).join(');
+    const gap = t.paths.map(d => `<path d="${d}" fill="#fff" stroke="#fff" stroke-width="${gapW.toFixed(2)}" stroke-linejoin="round"/>`).join('');
     return dome + gap;
   }
   if(mark.type === 'gumformer'){
@@ -1979,7 +1979,7 @@ function toothMarkSvgContent(type, mark, ctx){
     const body = `<path d="${d} Z" fill="${color}"/>`;
     // Diagonal gaps hinting at the spiral running around the body, so it reads as one continuous
     // thread rather than a stack of separate discs.
-    let spiral = ';
+    let spiral = '';
     for(let i=0;i<turns;i++){
       const y = platY - (i+0.5)*step;
       spiral += `<line x1="${(cx-coreAt(y)*0.95).toFixed(1)}" y1="${(y+step*0.20).toFixed(1)}" x2="${(cx+coreAt(y)*0.95).toFixed(1)}" y2="${(y-step*0.20).toFixed(1)}" stroke="#fff" stroke-width="${(span*0.022).toFixed(2)}" stroke-linecap="round" opacity="0.85"/>`;
@@ -2021,7 +2021,7 @@ function toothMarkSvgContent(type, mark, ctx){
     return capMarkup +
            `<line x1="${postStartX.toFixed(1)}" y1="${postStartY.toFixed(1)}" x2="${postEndX.toFixed(1)}" y2="${postEndY.toFixed(1)}" stroke="${color}" stroke-width="${postW.toFixed(2)}" stroke-linecap="round"/>`;
   }
-  return ';
+  return '';
 }
 function toothSvgMarkup(type, w, h, stroke, marks){
   const t = TOOTH_SVGS[type];
@@ -2035,25 +2035,25 @@ function toothSvgMarkup(type, w, h, stroke, marks){
   // A healing abutment implies the same thing: it only ever screws into an implant, so the natural
   // tooth is gone even when the fixture itself was placed in an earlier plan and isn't listed here.
   const toothGone = anatomicalMarks.some(m => m.type === 'implant' || m.type === 'gumformer');
-  const base = toothGone ? ' : t.paths.map(d => `<path d="${d}" fill="#fff" stroke="${stroke}" stroke-width="${sw.toFixed(2)}"/>`).join(');
-  const structLines = toothGone ? ' : (t.lines || []).map(d => `<path d="${d}" fill="none" stroke="${stroke}" stroke-width="${(sw*0.85).toFixed(2)}"/>`).join(');
+  const base = toothGone ? '' : t.paths.map(d => `<path d="${d}" fill="#fff" stroke="${stroke}" stroke-width="${sw.toFixed(2)}"/>`).join('');
+  const structLines = toothGone ? '' : (t.lines || []).map(d => `<path d="${d}" fill="none" stroke="${stroke}" stroke-width="${(sw*0.85).toFixed(2)}"/>`).join('');
   const insideMarks  = anatomicalMarks.filter(m => !OUTSIDE_MARK_TYPES.has(m.type));
   const outsideMarks = anatomicalMarks.filter(m =>  OUTSIDE_MARK_TYPES.has(m.type));
   // Painted before the tooth, so the silhouette hides the part that overlaps and only the ring
   // around the root remains visible.
-  const aroundContent = outsideMarks.map(m => toothMarkSvgContent(type, m, {onImplant: toothGone})).join(');
-  let markContent = ', outlineRestroke = ', defs = ';
+  const aroundContent = outsideMarks.map(m => toothMarkSvgContent(type, m, {onImplant: toothGone})).join('');
+  let markContent = '', outlineRestroke = '', defs = '';
   if(insideMarks.length){
-    const inner = insideMarks.map(m => toothMarkSvgContent(type, m, {onImplant: toothGone})).join(');
+    const inner = insideMarks.map(m => toothMarkSvgContent(type, m, {onImplant: toothGone})).join('');
     if(toothGone){
       // No tooth left to clip against — the fixture and its crown are drawn as finished shapes of
       // their own, so clipping them to the vanished tooth's outline would only chop them up.
       markContent = inner;
     } else {
       const clipId = 'tclip-' + type + Math.random().toString(36).slice(2,9);
-      defs = `<defs><clipPath id="${clipId}">${t.paths.map(d => `<path d="${d}"/>`).join(')}</clipPath></defs>`;
+      defs = `<defs><clipPath id="${clipId}">${t.paths.map(d => `<path d="${d}"/>`).join('')}</clipPath></defs>`;
       markContent = `<g clip-path="url(#${clipId})">${inner}</g>`;
-      outlineRestroke = t.paths.map(d => `<path d="${d}" fill="none" stroke="${stroke}" stroke-width="${sw.toFixed(2)}"/>`).join(');
+      outlineRestroke = t.paths.map(d => `<path d="${d}" fill="none" stroke="${stroke}" stroke-width="${sw.toFixed(2)}"/>`).join('');
     }
   }
   const [gvx, gvy, gvw, gvh] = t.vb.split(' ').map(Number);
@@ -2113,7 +2113,7 @@ function toothShapeHtml(n, cls, marks, stroke){
   const overlayMarks = list.filter(m => !ANATOMICAL_MARK_TYPES.has(m.type) && !JAW_MARK_TYPES.has(m.type));
   const svgHtml = toothSvgMarkup(type, w, h, stroke, anatomicalMarks);
   const flip = toothTransform(n, type, cls === 'lower');
-  const marksHtml = overlayMarks.map(m => markIconHtml(m)).join(');
+  const marksHtml = overlayMarks.map(m => markIconHtml(m)).join('');
   return `<div class="shape"><span style="display:block; transform:${flip};">${svgHtml}</span><div class="marks">${marksHtml}</div></div>`;
 }
 function buildArch(containerId, list, cls){
@@ -2270,7 +2270,7 @@ function renderMainLegend(){
   ];
   document.getElementById('chartLegend').innerHTML = items.map(([type,label]) =>
     `<span>${iconChipHtml(type, 18)}${label}</span>`
-  ).join(');
+  ).join('');
 }
 buildArch('archUpper', UPPER, 'upper');
 buildArch('archLower', LOWER, 'lower');
@@ -2316,7 +2316,7 @@ function renameStage(id, val){
 }
 function openAddService(stageId){
   activeStageId = stageId;
-  document.getElementById('serviceSearch').value = ';
+  document.getElementById('serviceSearch').value = '';
   document.getElementById('modalBackdrop').classList.add('open'); coachRefresh();
   renderTabs();
   renderServiceList();
@@ -2338,8 +2338,8 @@ function closeModal(){ document.getElementById('modalBackdrop').classList.remove
 function renderTabs(){
   const tabsEl = document.getElementById('tabs');
   tabsEl.innerHTML = Object.keys(SERVICES).map(cat =>
-    `<div class="tab ${cat===activeTab?'active':'}" onclick="setTab('${cat}')">${cat}</div>`
-  ).join(');
+    `<div class="tab ${cat===activeTab?'active':''}" onclick="setTab('${cat}')">${cat}</div>`
+  ).join('');
   const sel = [...selectedTeeth].sort();
   document.getElementById('modalTeethNote').textContent = sel.length
     ? 'Зубы: ' + sel.map(toDot).join(', ')
@@ -2361,11 +2361,11 @@ function renderServiceList(){
   el.innerHTML = rows.map(({s, i, cat}) =>
     `<div class="service-item">
        <span class="s-name" style="flex:1;" onclick="pickService('${cat}', ${i})">${esc(s.name)}</span>
-       ${searching ? `<span class="s-cat">${esc(cat.replace('Для ','))}</span>` : '}
+       ${searching ? `<span class="s-cat">${esc(cat.replace('Для ',''))}</span>` : ''}
        <span class="s-price" onclick="pickService('${cat}', ${i})">${fmt(s.price)}</span>
        <button class="icon-btn" onclick="deleteCatalogService('${cat}', ${i})" title="Удалить услугу из списка">🗑</button>
      </div>`
-  ).join(');
+  ).join('');
 }
 function pickService(cat, idx){
   const s = SERVICES[cat][idx];
@@ -2382,11 +2382,11 @@ let nsIcon = 'auto';
 function openNewService(context){
   nsContext = context || 'picker';
   nsIcon = 'auto';
-  document.getElementById('nsName').value = ';
-  document.getElementById('nsPrice').value = ';
+  document.getElementById('nsName').value = '';
+  document.getElementById('nsPrice').value = '';
   const cats = Object.keys(SERVICES);
   const preset = nsContext === 'settings' ? settingsTab : activeTab;
-  document.getElementById('nsCat').innerHTML = cats.map(c => `<option value="${esc(c)}"${c===preset?' selected':'}>${esc(c)}</option>`).join(');
+  document.getElementById('nsCat').innerHTML = cats.map(c => `<option value="${esc(c)}"${c===preset?' selected':''}>${esc(c)}</option>`).join('');
   renderNsJaw();
   renderNsIcons();
   // Родительское окно закрываем, а не наслаиваем: у всех окон одинаковый z-index, и то, что идёт
@@ -2410,7 +2410,7 @@ function closeNewService(){
 // The jaw tag only means anything for jaw-wide services, so it appears only for that section.
 function renderNsJaw(){
   const isJaw = document.getElementById('nsCat').value === 'Для челюстей';
-  document.getElementById('nsJawField').style.display = isJaw ? ' : 'none';
+  document.getElementById('nsJawField').style.display = isJaw ? '' : 'none';
 }
 function renderNsIcons(){
   document.getElementById('nsIcons').innerHTML = ICON_OPTIONS.map(opt => {
@@ -2418,7 +2418,7 @@ function renderNsIcons(){
       ? `<span style="font-size:12px;">${opt.swatch}</span>`
       : iconChipHtml(opt.key, 24);
     return `<button class="btn ${nsIcon===opt.key?'btn-primary':'btn-line'} btn-sm" style="padding:3px 5px;" onclick="setNsIcon('${opt.key}')" title="${opt.label}">${content}</button>`;
-  }).join(');
+  }).join('');
   const opt = ICON_OPTIONS.find(o => o.key === nsIcon);
   document.getElementById('nsIconHint').textContent = nsIcon === 'auto'
     ? 'Авто — символ подберётся по названию услуги. Если промахнётся, выбери значок вручную.'
@@ -2439,7 +2439,7 @@ async function saveNewService(){
   if(nsContext === 'settings'){
     settingsTab = cat;
     renderSettingsTabs();
-    document.getElementById('settingsSearch').value = ';
+    document.getElementById('settingsSearch').value = '';
     renderSettingsList();
   } else {
     addItemToStage(entry.name, entry.price, entry);   // straight into the plan being edited
@@ -2550,21 +2550,21 @@ function renderStages(){
       const markType = resolveMarkType(it);
       const surfacesUi = markType === 'filling' ? `
           <span style="font-size:11px; color:var(--ink-soft); margin-left:2px;">Поверхн.:</span>
-          ${[1,2,3].map(n => `<button class="btn ${it.surfaces===n?'btn-primary':'btn-line'} btn-sm" style="padding:4px 8px;" onclick="setSurfaces(${s.id},${it.id},${n})">${n}</button>`).join(')}
-        ` : ';
+          ${[1,2,3].map(n => `<button class="btn ${it.surfaces===n?'btn-primary':'btn-line'} btn-sm" style="padding:4px 8px;" onclick="setSurfaces(${s.id},${it.id},${n})">${n}</button>`).join('')}
+        ` : '';
       const canalsUi = markType === 'canal' ? `
           <span style="font-size:11px; color:var(--ink-soft); margin-left:2px;">Каналов:</span>
-          ${[1,2,3].map(n => `<button class="btn ${it.canals===n?'btn-primary':'btn-line'} btn-sm" style="padding:4px 8px;" onclick="setCanals(${s.id},${it.id},${n})">${n}</button>`).join(')}
-        ` : ';
+          ${[1,2,3].map(n => `<button class="btn ${it.canals===n?'btn-primary':'btn-line'} btn-sm" style="padding:4px 8px;" onclick="setCanals(${s.id},${it.id},${n})">${n}</button>`).join('')}
+        ` : '';
       const discountAmt = it.basePrice > it.price ? (it.basePrice - it.price) : 0;
-      const discountBadge = discountAmt > 0 ? `<div style="font-size:10.5px; font-weight:700; color:var(--green);">Скидка ${fmt(discountAmt)}</div>` : ';
+      const discountBadge = discountAmt > 0 ? `<div style="font-size:10.5px; font-weight:700; color:var(--green);">Скидка ${fmt(discountAmt)}</div>` : '';
       // Say so out loud when a symbol can't be drawn on a tooth the doctor picked, otherwise the
       // mark just silently fails to appear and looks like a bug.
       const blocked = markType ? parseTeethField(it.teeth).filter(t => !markAllowedOnTooth(markType, t)) : [];
       const blockedNote = blocked.length ? `
         <div class="item-teeth-label" style="grid-column:1/-1; color:var(--red); font-size:11px;">
           ⚠ Синус-лифтинг возможен только на верхней челюсти — на ${blocked.map(toDot).join(', ')} символ не ставится.
-        </div>` : ';
+        </div>` : '';
       return `
       <div class="item-row">
         <div class="name">${esc(it.name)}</div>
@@ -2585,11 +2585,11 @@ function renderStages(){
           <span style="font-size:11px; color:var(--ink-soft);">Скидка от базовой (${fmt(it.basePrice)}):</span>
           <button class="btn ${it.discountType==='amount'?'btn-primary':'btn-line'} btn-sm" style="padding:4px 8px;" onclick="setDiscountType(${s.id},${it.id},'amount')">₽</button>
           <button class="btn ${it.discountType==='percent'?'btn-primary':'btn-line'} btn-sm" style="padding:4px 8px;" onclick="setDiscountType(${s.id},${it.id},'percent')">%</button>
-          <input type="number" class="num-input" style="width:64px;" value="${it.discountValue || '}" placeholder="0" onchange="setDiscountValue(${s.id},${it.id}, this.value)">
+          <input type="number" class="num-input" style="width:64px;" value="${it.discountValue || ''}" placeholder="0" onchange="setDiscountValue(${s.id},${it.id}, this.value)">
         </div>
       </div>
     `;
-    }).join(') : `<div class="empty-stage">Нет добавленных услуг</div>`;
+    }).join('') : `<div class="empty-stage">Нет добавленных услуг</div>`;
 
     return `
       <div class="stage">
@@ -2605,10 +2605,10 @@ function renderStages(){
           <button class="btn btn-ghost btn-sm" onclick="openAddService(${s.id})">+ Добавить услугу</button>
         </div>
         <textarea class="stage-note" rows="2" placeholder="Комментарий к этапу — попадёт в PDF под таблицей"
-                  onchange="setStageNote(${s.id}, this.value)">${esc(s.note || ')}</textarea>
+                  onchange="setStageNote(${s.id}, this.value)">${esc(s.note || '')}</textarea>
       </div>
     `;
-  }).join(');
+  }).join('');
 
   document.getElementById('grandTotal').textContent = fmt(renderPlanDiscount().total);
   renderPlanMeta();   // the document code depends on the contents, so it is refreshed with them
@@ -2642,7 +2642,7 @@ let licenseToken = null;      // {n, u} — проверенная полезн�
 let usage = {patients: [], plans: [], maxSeen: null};
 
 const b64ToBytes = (s) => Uint8Array.from(atob(s.replace(/-/g,'+').replace(/_/g,'/')), c => c.charCodeAt(0));
-const bytesToB64url = (b) => btoa(String.fromCharCode(...new Uint8Array(b))).replace(/\+/g,'-').replace(/\//g,'_').replace(/=+$/,');
+const bytesToB64url = (b) => btoa(String.fromCharCode(...new Uint8Array(b))).replace(/\+/g,'-').replace(/\//g,'_').replace(/=+$/,'');
 
 // Возвращает полезную нагрузку, если подпись верна, иначе null. Любая ошибка разбора — тоже null:
 // сломанный токен не должен ронять приложение, он должен просто не действовать.
@@ -2675,8 +2675,8 @@ function licenseState(){
   const today = licenseToday();
   if(licenseToken && licenseToken.u){
     const left = daysBetween(today, licenseToken.u);
-    if(left >= 0) return {mode:'active', until:licenseToken.u, daysLeft:left, name:licenseToken.n||'};
-    if(-left <= LICENSE.graceDays) return {mode:'grace', until:licenseToken.u, daysLeft:LICENSE.graceDays + left, name:licenseToken.n||'};
+    if(left >= 0) return {mode:'active', until:licenseToken.u, daysLeft:left, name:licenseToken.n||''};
+    if(-left <= LICENSE.graceDays) return {mode:'grace', until:licenseToken.u, daysLeft:LICENSE.graceDays + left, name:licenseToken.n||''};
     return {mode:'expired', until:licenseToken.u, reason:'subscription'};
   }
   const p = usage.patients.length, pl = usage.plans.length;
@@ -2695,7 +2695,7 @@ function licenseAllowsWork(){
 function licenseBlockMessage(){
   const st = licenseState();
   if(st.reason === 'trial') return `Пробный период закончился — использовано ${st.patients} из ${LICENSE.trialPatients} пациентов и ${st.plans} из ${LICENSE.trialPlans} планов.\n\nСтарые планы остаются доступны: их можно открыть и выгрузить в PDF. Чтобы создавать новые, введи код подписки.`;
-  return `Подписка закончилась ${st.until ? new Date(st.until).toLocaleDateString('ru-RU') : '}.\n\nСтарые планы остаются доступны: их можно открыть и выгрузить в PDF. Чтобы создавать новые, введи код подписки.`;
+  return `Подписка закончилась ${st.until ? new Date(st.until).toLocaleDateString('ru-RU') : ''}.\n\nСтарые планы остаются доступны: их можно открыть и выгрузить в PDF. Чтобы создавать новые, введи код подписки.`;
 }
 function requireLicense(){
   if(licenseAllowsWork()) return true;
@@ -2745,12 +2745,12 @@ let PATIENTS = [];
 let currentPatientId = null;
 
 function fmtStamp(iso){
-  if(!iso) return ';
+  if(!iso) return '';
   const d = new Date(iso);
-  if(isNaN(d)) return ';
+  if(isNaN(d)) return '';
   return d.toLocaleDateString('ru-RU') + ', ' + d.toLocaleTimeString('ru-RU', {hour:'2-digit', minute:'2-digit'});
 }
-function esc(s){ return String(s == null ? ' : s).replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c])); }
+function esc(s){ return String(s == null ? '' : s).replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c])); }
 // Сумма в списке планов — та, что врач назовёт пациенту, то есть уже со скидкой на план.
 function planTotal(st){
   const sub = (st.stages||[]).reduce((sum,s) => sum + (s.items||[]).reduce((a,i) => a + i.price*i.qty, 0), 0);
@@ -2772,7 +2772,7 @@ async function migratePlansToPatients(){
   if(old.length){
     const byName = {};
     for(const e of old.slice().reverse()){          // oldest first, so createdAt comes out sane
-      const name = (e.name || ').trim() || 'Без имени';
+      const name = (e.name || '').trim() || 'Без имени';
       const key = name.toLowerCase();
       // Read the plan body FIRST: an index row whose plan blob is missing or unparseable would
       // otherwise leave behind a patient with no plans and no explanation of where they came from.
@@ -2784,7 +2784,7 @@ async function migratePlansToPatients(){
       }
       const patient = byName[key];
       state.patientId = patient.id;
-      state.title = 'План от ' + (e.date || (e.savedAt || ').slice(0,10));
+      state.title = 'План от ' + (e.date || (e.savedAt || '').slice(0,10));
       state.createdAt = e.savedAt || new Date().toISOString();
       state.updatedAt = e.savedAt || state.createdAt;
       await storageSet('plan:' + e.id, state);
@@ -2803,7 +2803,7 @@ function showScreen(id){
     document.getElementById(s).classList.toggle('active', s === id);
   });
   // The PDF bar belongs to the editor only — on the list screens there is nothing to export.
-  document.getElementById('bottomBar').style.display = (id === 'viewEditor') ? ' : 'none';
+  document.getElementById('bottomBar').style.display = (id === 'viewEditor') ? '' : 'none';
   document.body.classList.toggle('no-editor', id !== 'viewEditor');
   window.scrollTo(0, 0);
 }
@@ -2847,8 +2847,8 @@ async function renderPatients(){
   const q = document.getElementById('patientSearch').value.trim().toLowerCase();
   const list = PATIENTS.filter(p => !q || p.name.toLowerCase().includes(q))
                        .sort((a,b) => {
-                         const ta = a.touchedAt || a.createdAt || ';
-                         const tb = b.touchedAt || b.createdAt || ';
+                         const ta = a.touchedAt || a.createdAt || '';
+                         const tb = b.touchedAt || b.createdAt || '';
                          if(ta !== tb) return tb.localeCompare(ta);   // свежие сверху
                          return a.name.localeCompare(b.name, 'ru');  // без отметки — по алфавиту
                        });
@@ -2872,7 +2872,7 @@ async function renderPatients(){
         <div class="t2">${counts[p.id] ? counts[p.id] + ' ' + plural(counts[p.id], 'план','плана','планов') : 'нет планов'}</div>
       </div>
       <div class="acts"><button class="btn btn-line btn-sm" onclick="openPatient('${p.id}')">Открыть</button></div>
-    </div>`).join(');
+    </div>`).join('');
 }
 function plural(n, one, few, many){
   const m10 = n % 10, m100 = n % 100;
@@ -2883,7 +2883,7 @@ function plural(n, one, few, many){
 async function createPatient(){
   if(!storageAvailable()){ alert('Сохранение недоступно в этом окне просмотра — открой страницу по обычной ссылке в браузере.'); return; }
   if(!requireLicense()) return;
-  const name = (prompt('ФИО пациента') || ').trim();
+  const name = (prompt('ФИО пациента') || '').trim();
   if(!name) return;
   const now = new Date().toISOString();
   const p = {id: genId('pt'), name, createdAt: now, touchedAt: now};
@@ -2898,7 +2898,7 @@ async function createPatient(){
 }
 async function renamePatient(){
   const p = patientById(currentPatientId); if(!p) return;
-  const name = (prompt('ФИО пациента', p.name) || ').trim();
+  const name = (prompt('ФИО пациента', p.name) || '').trim();
   if(!name || name === p.name) return;
   p.name = name;
   await savePatients();
@@ -2914,7 +2914,7 @@ async function renamePatient(){
 async function removePatient(){
   const p = patientById(currentPatientId); if(!p) return;
   const list = await planIndex(p.id);
-  if(!confirm(`Удалить пациента «${p.name}»${list.length ? ' и его ' + list.length + ' ' + plural(list.length,'план','плана','планов') : '}? Это нельзя отменить.`)) return;
+  if(!confirm(`Удалить пациента «${p.name}»${list.length ? ' и его ' + list.length + ' ' + plural(list.length,'план','плана','планов') : ''}? Это нельзя отменить.`)) return;
   for(const e of list) await storageDelete('plan:' + e.id);
   await storageDelete('plans-index:' + p.id);
   PATIENTS = PATIENTS.filter(x => x.id !== p.id);
@@ -2945,7 +2945,7 @@ async function renderPatientPlans(){
         <button class="btn btn-line btn-sm" onclick="copyPlan('${e.id}')">Копия</button>
         <button class="icon-btn" onclick="deletePlan('${e.id}')">🗑</button>
       </div>
-    </div>`).join(');
+    </div>`).join('');
 }
 
 function serializeState(){
@@ -2963,9 +2963,9 @@ function serializeState(){
 }
 function applyState(state){
   autosaveHold++;               // loading is not an edit — must not bump «изменён»
-  document.getElementById('patientName').value = state.patientName || ';
-  const t = document.getElementById('planTitle'); if(t) t.value = state.title || ';
-  document.getElementById('planDate').value = state.planDate || ';
+  document.getElementById('patientName').value = state.patientName || '';
+  const t = document.getElementById('planTitle'); if(t) t.value = state.title || '';
+  document.getElementById('planDate').value = state.planDate || '';
   // Текст согласия НЕ восстанавливается из плана: он общий и живёт в настройках. Открытие старого
   // плана не должно молча подменять действующую редакцию согласия на ту, что была год назад.
   // А вот скидка — свойство именно этого плана, её восстанавливаем.
@@ -3050,7 +3050,7 @@ async function savePlan(opts){
   await savePlanIndex(pid, list);
   const pt = patientById(pid);
   if(pt){
-    const prev = String(pt.touchedAt || ');
+    const prev = String(pt.touchedAt || '');
     pt.touchedAt = now;                                  // порядок в списке верен сразу
     // На диск — не чаще раза в минуту: автосохранение срабатывает каждые полсекунды правки,
     // и переписывать из-за этого весь список пациентов незачем. Отставание записи на минуту
@@ -3118,7 +3118,7 @@ function newPlanForPatient(){
   currentPlanId = null;
   currentPlanStamps = {createdAt:null, updatedAt:null};
   document.getElementById('patientName').value = p.name;
-  document.getElementById('planTitle').value = ';
+  document.getElementById('planTitle').value = '';
   document.getElementById('planDate').valueAsDate = new Date();
   selectedTeeth.clear();
   planDiscount = {type:'none', value:0};
@@ -3163,10 +3163,10 @@ function renderPlanDiscount(){
     if(b) b.className = 'btn btn-sm ' + (planDiscount.type === t ? 'btn-primary' : 'btn-line');
   });
   const inp = document.getElementById('pdValue');
-  if(inp && document.activeElement !== inp) inp.value = planDiscount.value || ';
-  if(inp) inp.style.display = planDiscount.type === 'none' ? 'none' : ';
+  if(inp && document.activeElement !== inp) inp.value = planDiscount.value || '';
+  if(inp) inp.style.display = planDiscount.type === 'none' ? 'none' : '';
   const note = document.getElementById('pdNote');
-  if(note) note.textContent = off ? 'минус ' + fmt(off) + ' от ' + fmt(sub) : ';
+  if(note) note.textContent = off ? 'минус ' + fmt(off) + ' от ' + fmt(sub) : '';
   const label = document.getElementById('grandLabel');
   if(label) label.textContent = off ? 'К оплате со скидкой' : 'Итого по прайсу';
   return {sub, off, total: sub - off};
@@ -3243,7 +3243,7 @@ async function applyBackup(d, mode){
       await storageSet('plan:' + e.id, body);
       list.push(e);
     }
-    list.sort((a,b) => String(b.updatedAt || ').localeCompare(String(a.updatedAt || ')));
+    list.sort((a,b) => String(b.updatedAt || '').localeCompare(String(a.updatedAt || '')));
     await storageSet('plans-index:' + p.id, list);
   }
   await storageSet('patients-index', merged);
@@ -3257,8 +3257,8 @@ let pendingBackup = null;
 let lastBackupUrl = null;
 async function openBackup(){
   pendingBackup = null;
-  document.getElementById('backupFile').value = ';
-  document.getElementById('backupPreview').innerHTML = ';
+  document.getElementById('backupFile').value = '';
+  document.getElementById('backupPreview').innerHTML = '';
   const s = backupStats(await collectBackup());
   document.getElementById('backupState').innerHTML =
     `<div style="background:var(--blue-mist); color:var(--blue-deep); border-radius:10px; padding:12px 14px; font-size:14px;">
@@ -3286,7 +3286,7 @@ function previewBackup(input){
   const box = document.getElementById('backupPreview');
   const file = input.files && input.files[0];
   pendingBackup = null;
-  if(!file){ box.innerHTML = '; return; }
+  if(!file){ box.innerHTML = ''; return; }
   const fr = new FileReader();
   fr.onload = () => {
     try{
@@ -3338,8 +3338,8 @@ const DOC_HEADER_KEY = 'doc-header-v1';
 function agreementEl(){ return document.getElementById('agreementText'); }
 // Шапка необязательна: врач может не заполнять ничего, и тогда её в документе просто нет.
 function docHeader(){
-  return {clinic: (document.getElementById('docClinic').value || ').trim(),
-          doctor: (document.getElementById('docDoctor').value || ').trim()};
+  return {clinic: (document.getElementById('docClinic').value || '').trim(),
+          doctor: (document.getElementById('docDoctor').value || '').trim()};
 }
 function saveDocHeader(){ storageSet(DOC_HEADER_KEY, docHeader()); }
 async function initAgreement(){
@@ -3347,8 +3347,8 @@ async function initAgreement(){
   if(typeof saved === 'string' && saved.trim()) agreementEl().value = saved;
   const h = await storageGet(DOC_HEADER_KEY);
   if(h && typeof h === 'object'){
-    document.getElementById('docClinic').value = h.clinic || ';
-    document.getElementById('docDoctor').value = h.doctor || ';
+    document.getElementById('docClinic').value = h.clinic || '';
+    document.getElementById('docDoctor').value = h.doctor || '';
   }
 }
 function saveAgreement(){ storageSet(AGREEMENT_KEY, agreementEl().value); }
@@ -3374,7 +3374,7 @@ function licenseSummary(){
 }
 function openLicenseDialog(){
   renderLicenseStatusBox();
-  document.getElementById('licenseResult').textContent = ';
+  document.getElementById('licenseResult').textContent = '';
   document.getElementById('licenseBackdrop').classList.add('open'); coachRefresh();
 }
 // Отдельно от openLicenseDialog: после успешного ввода кода надо обновить состояние, НЕ стирая
@@ -3384,12 +3384,12 @@ function renderLicenseStatusBox(){
   const st = licenseState(), s = licenseSummary();
   const bg = s.tone === 'ok' ? 'var(--green-mist)' : (s.tone === 'warn' ? '#fdf3df' : 'var(--red-mist)');
   const fg = s.tone === 'ok' ? '#14603f' : (s.tone === 'warn' ? '#7a5a09' : '#8d2a1e');
-  let extra = ';
+  let extra = '';
   if(st.mode === 'trial') extra = 'Пока идёт пробный период, приложение работает полностью.';
   else if(st.mode === 'expired') extra = 'Созданные планы остаются доступны: их можно открыть и выгрузить в PDF. Заблокировано только создание новых.';
   document.getElementById('licenseStatusBox').innerHTML =
     `<div style="background:${bg}; color:${fg}; border-radius:10px; padding:12px 14px; font-size:14px; line-height:1.5;">
-       <b>${esc(s.text)}</b>${extra ? '<div style="margin-top:6px; font-weight:400;">' + esc(extra) + '</div>' : '}
+       <b>${esc(s.text)}</b>${extra ? '<div style="margin-top:6px; font-weight:400;">' + esc(extra) + '</div>' : ''}
      </div>`;
 }
 function closeLicenseDialog(){ document.getElementById('licenseBackdrop').classList.remove('open'); coachRefresh(); }
@@ -3403,7 +3403,7 @@ async function submitLicenseToken(){
     return;
   }
   if(await applyLicenseToken(raw)){
-    document.getElementById('licenseInput').value = ';
+    document.getElementById('licenseInput').value = '';
     out.style.color = 'var(--green)';
     out.textContent = 'Готово. Подписка активна до ' + new Date(licenseToken.u).toLocaleDateString('ru-RU') + '.';
     renderLicenseStrip();
@@ -3661,17 +3661,17 @@ function openOnboarding(step){
   renderOnboarding();
   document.getElementById('onboard').classList.add('open'); coachRefresh();
 }
-const APP_VERSION = '1.3';   // видно в инструкции — чтобы понимать, что стоит на телефоне
+const APP_VERSION = "1.4";   // видно в инструкции — чтобы понимать, что стоит на телефоне
 function renderOnboarding(){
   document.getElementById('obVersion').textContent = 'Версия ' + APP_VERSION;
   const s = ONBOARD_STEPS[obStep];
   document.getElementById('obIco').textContent = s.ico;
   document.getElementById('obTitle').textContent = s.title;
   document.getElementById('obBody').innerHTML = s.body;
-  document.getElementById('obDots').innerHTML = ONBOARD_STEPS.map((_,i) => `<i class="${i===obStep?'on':'}"></i>`).join(');
+  document.getElementById('obDots').innerHTML = ONBOARD_STEPS.map((_,i) => `<i class="${i===obStep?'on':''}"></i>`).join('');
   const last = obStep === ONBOARD_STEPS.length - 1;
   document.getElementById('obNext').textContent = last ? 'Понятно' : 'Далее';
-  document.getElementById('obSkip').style.visibility = last ? 'hidden' : ';
+  document.getElementById('obSkip').style.visibility = last ? 'hidden' : '';
 }
 function obNext(){
   if(obStep < ONBOARD_STEPS.length - 1){ obStep++; renderOnboarding(); return; }
@@ -3739,19 +3739,19 @@ async function ensurePdfLibs(){
 // recomputes it. It catches the realistic case — a number quietly changed in a copy of the file.
 function planFingerprint(state){
   const canon = [
-    (state.patientName || ').trim().toLowerCase(),
-    state.planDate || ',
+    (state.patientName || '').trim().toLowerCase(),
+    state.planDate || '',
     // The agreement is printed on the patient's copy and carries figures of its own ("действительна
     // в течение 3х месяцев"), so it has to be covered — otherwise editing that number in a copy
     // leaves the code intact and the check passes. Stage notes stay out on purpose (see setStageNote).
-    (state.agreementText || ').trim(),
+    (state.agreementText || '').trim(),
     // Скидка на план меняет итоговую цифру, а шапка — то, от чьего имени документ. И то и другое
     // печатается, значит и то и другое должно ломать код при подмене.
     JSON.stringify(state.planDiscount || {}),
     JSON.stringify(state.docHeader || {}),
     (state.stages || []).map(s =>
-      (s.title || ') + '|' + (s.items || []).map(i =>
-        [i.name, i.price, i.qty, i.teeth || '].join('~')
+      (s.title || '') + '|' + (s.items || []).map(i =>
+        [i.name, i.price, i.qty, i.teeth || ''].join('~')
       ).join(';')
     ).join('\n'),
   ].join('\n');
@@ -3762,7 +3762,7 @@ function planFingerprint(state){
     h1 = Math.imul(h1 ^ c, 16777619) >>> 0;
     h2 = (Math.imul(h2 + c, 2654435761) ^ (h2 >>> 13)) >>> 0;
   }
-  const raw = (h1.toString(36) + h2.toString(36)).toUpperCase().replace(/[^A-Z0-9]/g, ');
+  const raw = (h1.toString(36) + h2.toString(36)).toUpperCase().replace(/[^A-Z0-9]/g, '');
   const s = (raw + '00000000').slice(0, 8);
   return s.slice(0, 4) + '-' + s.slice(4, 8);
 }
@@ -3778,7 +3778,7 @@ function buildPrintSheet(){
   const sheet = document.getElementById('printSheet');
   const name = document.getElementById('patientName').value.trim() || '—';
   const dateVal = document.getElementById('planDate').value;
-  const dateStr = dateVal ? new Date(dateVal).toLocaleDateString('ru-RU') : ';
+  const dateStr = dateVal ? new Date(dateVal).toLocaleDateString('ru-RU') : '';
   // The plan's own title is the doctor's shelf label and stays out of the patient's copy; what the
   // patient needs is whose plan it is and how current it is.
   const savedStr = fmtStamp(currentPlanStamps.updatedAt);
@@ -3795,13 +3795,13 @@ function buildPrintSheet(){
     const h = Math.round(dims.h * scale.h);
     const svgHtml = toothSvgMarkup(type, w, h, '#333', anatomicalMarks);
     const flip = toothTransform(n, type, !isUpper);
-    const marksHtml = overlayMarks.map(m => markIconHtml(m)).join(');
+    const marksHtml = overlayMarks.map(m => markIconHtml(m)).join('');
     const shapeHtml = `<div class="shape"><span style="display:block; transform:${flip};">${svgHtml}</span><div class="p-marks">${marksHtml}</div></div>`;
     const numHtml = `<div class="num">${n}</div>`;
     return `<div class="p-tooth" data-tooth="${n}" data-type="${type}">${isUpper ? numHtml+shapeHtml : shapeHtml+numHtml}</div>`;
   }
-  const upperHtml = UPPER.map((n,i) => (i===8?'<div style="width:12px"></div>':') + toothCell(n,true)).join(');
-  const lowerHtml = LOWER.map((n,i) => (i===8?'<div style="width:12px"></div>':') + toothCell(n,false)).join(');
+  const upperHtml = UPPER.map((n,i) => (i===8?'<div style="width:12px"></div>':'') + toothCell(n,true)).join('');
+  const lowerHtml = LOWER.map((n,i) => (i===8?'<div style="width:12px"></div>':'') + toothCell(n,false)).join('');
 
   let grand = 0;
   const stagesHtml = stages.filter(s=>s.items.length).map(s => {
@@ -3814,22 +3814,22 @@ function buildPrintSheet(){
         : fmt(it.price);
       return `
       <tr>
-        <td>${esc(it.name)}${it.teeth ? `<div class="teeth">Зубы: ${esc(it.teeth)}</div>` : '}</td>
+        <td>${esc(it.name)}${it.teeth ? `<div class="teeth">Зубы: ${esc(it.teeth)}</div>` : ''}</td>
         <td class="num">${priceCell}</td>
         <td class="num">${it.qty}</td>
         <td class="num">${fmt(it.price*it.qty)}</td>
       </tr>
     `;
-    }).join(');
+    }).join('');
     return `
       <div class="p-stage-title"><span>${esc(s.title)}</span><span>${fmt(stageTotal)}</span></div>
       <table>
         <thead><tr><th>Услуга</th><th class="num">Цена за ед.</th><th class="num">Кол-во</th><th class="num">Всего</th></tr></thead>
         <tbody>${rows}</tbody>
       </table>
-      ${s.note && s.note.trim() ? `<div class="p-stage-note">${esc(s.note.trim())}</div>` : '}
+      ${s.note && s.note.trim() ? `<div class="p-stage-note">${esc(s.note.trim())}</div>` : ''}
     `;
-  }).join(');
+  }).join('');
 
   // The patient's copy explains only the symbols that actually appear on THEIR chart. Printing the
   // whole alphabet made them hunt for which of the twelve were relevant, and implied a scope of
@@ -3840,22 +3840,22 @@ function buildPrintSheet(){
   jaws.upper.concat(jaws.lower).forEach(t => usedTypes.add(t));
   const legendRows = PDF_LEGEND.filter(([type]) => usedTypes.has(type));
   const legendHtml = legendRows.length
-    ? `<div class="p-legend">${legendRows.map(([type,label]) => `<span>${iconChipHtml(type, 16)}${label}</span>`).join(')}</div>`
-    : ';
+    ? `<div class="p-legend">${legendRows.map(([type,label]) => `<span>${iconChipHtml(type, 16)}${label}</span>`).join('')}</div>`
+    : '';
 
   const agreement = document.getElementById('agreementText').value;
   const planOff = planDiscountAmount(grand);
   const hdr = docHeader();
   const headerHtml = (hdr.clinic || hdr.doctor)
-    ? `<div class="p-clinic">${hdr.clinic ? `<div class="cname">${esc(hdr.clinic)}</div>` : '}${hdr.doctor ? `<div class="cdoc">Врач: ${esc(hdr.doctor)}</div>` : '}</div>`
-    : ';
+    ? `<div class="p-clinic">${hdr.clinic ? `<div class="cname">${esc(hdr.clinic)}</div>` : ''}${hdr.doctor ? `<div class="cdoc">Врач: ${esc(hdr.doctor)}</div>` : ''}</div>`
+    : '';
 
   sheet.innerHTML = `
     ${headerHtml}
     <h1>План лечения</h1>
     <div class="meta"><b>Пациент:</b> ${esc(name)}</div>
     <div class="meta"><b>Дата создания:</b> ${dateStr}</div>
-    ${savedStr ? `<div class="meta"><b>Последнее изменение:</b> ${savedStr}</div>` : '}
+    ${savedStr ? `<div class="meta"><b>Последнее изменение:</b> ${savedStr}</div>` : ''}
     <div class="greeting">Уважаемый(ая) ${esc(name)},<br>Представляем Вашему вниманию план лечения ваших зубов:</div>
     ${legendHtml}
     <div class="p-arch upper" style="display:flex;justify-content:center;">${upperHtml}</div>
@@ -3941,13 +3941,13 @@ function offerPdfShare(blob, filename){
 }
 function showPreview(pages, url, filename){
   document.getElementById('previewPages').innerHTML =
-    pages.map(src => `<img src="${src}" alt="Страница документа">`).join(');
+    pages.map(src => `<img src="${src}" alt="Страница документа">`).join('');
   // Отправка файлом есть не везде: на компьютере системного листа нет, там оставляем скачивание.
   const dl = document.getElementById('previewDownload');
   dl.href = url; dl.download = filename;
   const canShare = !!lastPdfFile;
-  document.getElementById('previewShare').style.display = canShare ? ' : 'none';
-  dl.style.display = canShare ? 'none' : ';
+  document.getElementById('previewShare').style.display = canShare ? '' : 'none';
+  dl.style.display = canShare ? 'none' : '';
   document.getElementById('previewBackdrop').classList.add('open');
   coachRefresh();
 }
@@ -3968,7 +3968,7 @@ async function sharePdf(btn){
 }
 async function generatePDF(btn){
   btn = btn || document.querySelector('#bottomBar .btn-primary');
-  const origText = btn ? btn.textContent : ';
+  const origText = btn ? btn.textContent : '';
   if(btn){ btn.textContent = 'Формирую…'; btn.disabled = true; }
 
   try{
@@ -3986,7 +3986,7 @@ async function generatePDF(btn){
       const st = serializeState();
       const fp = planFingerprint(st);
       pdf.setProperties({
-        title: 'План лечения — ' + (st.patientName || ').trim(),
+        title: 'План лечения — ' + (st.patientName || '').trim(),
         subject: 'Документ ' + fp,
         keywords: 'plan-fingerprint:' + fp,
         creator: 'План лечения',
@@ -4022,8 +4022,8 @@ async function generatePDF(btn){
       pdf.addImage(durl, 'JPEG', 0, MARGIN, pageWidth, hPx / pxPerCss * ptPerCss);
     }
 
-    const full = document.getElementById('patientName').value.trim().replace(/[^a-zA-Zа-яА-ЯёЁ0-9 -]/g,');
-    const surname = full.split(/\s+/)[0] || ';
+    const full = document.getElementById('patientName').value.trim().replace(/[^a-zA-Zа-яА-ЯёЁ0-9 -]/g,'');
+    const surname = full.split(/\s+/)[0] || '';
     const d = document.getElementById('planDate').value;           // YYYY-MM-DD
     const dateStr = d ? d.split('-').reverse().join('.') : new Date().toLocaleDateString('ru-RU');
     const filename = ['План', surname, dateStr].filter(Boolean).join(' ') + '.pdf';
@@ -4045,7 +4045,7 @@ async function generatePDF(btn){
     // The offscreen sheet is a full second copy of the chart (32 teeth of SVG) plus every table;
     // there is no reason to keep it in the DOM between exports.
     const sheet = document.getElementById('printSheet');
-    if(sheet) sheet.innerHTML = ';
+    if(sheet) sheet.innerHTML = '';
     if(btn){ btn.textContent = origText; btn.disabled = false; }
   }
 }
