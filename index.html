@@ -1188,7 +1188,7 @@ function computeToothMarks(){
   stages.forEach(s => s.items.forEach(it => {
     const type = resolveMarkType(it);
     if(!type) return;
-    const mark = {type, surfaces: it.surfaces || 1, canals: it.canals || 1};
+    const mark = {type};
     parseTeethField(it.teeth).forEach(t => {
       if(!markAllowedOnTooth(type, t)) return;
       if(!marks[t]) marks[t] = [];
@@ -1556,8 +1556,8 @@ function renderIconPicker(){
     ? 'Символ подобран по названию услуги. Если промахнулся — выбери нужный вручную.'
     : (key === 'none' ? 'Эта услуга ничего не рисует на схеме.' : 'Символ выбран вручную.');
 
-  // Превью на моляре: на нём видно и несколько каналов, и как коронка садится на зуб.
-  const mark = type ? {type, surfaces: 2, canals: 3} : null;
+  // Превью на моляре: на нём лучше всего видно, как символ садится на зуб.
+  const mark = type ? {type} : null;
   const anat = mark && ANATOMICAL_MARK_TYPES.has(mark.type);
   const overlay = mark && !anat ? markIconHtml(mark) : '';
   const svg = toothSvgMarkup('molar', TOOTH_DIMS.molar.w * 1.6, TOOTH_DIMS.molar.h * 1.6, '#9fb0cc',
@@ -1882,19 +1882,17 @@ function toothMarkSvgContent(type, mark, ctx){
   if(mark.type === 'filling'){
     // Sits right at the incisal/occlusal edge, overlapping it, so the outer clip crops it into a
     // flattened "bite taken out of the edge and filled in" shape — like a cavity notch packed with
-    // material — rather than a plain dot floating mid-crown. Grows with the number of treated
-    // surfaces, so size still reads as "how much" without anything to count.
-    const n = Math.min(3, Math.max(1, mark.surfaces || 1));
-    const r = Math.min(vw*0.32, crownH*(0.17 + n*0.08));
+    // material — rather than a plain dot floating mid-crown. One fixed size: the symbol says
+    // "there is a filling here", and how many surfaces it covers is what the service name says.
+    const r = Math.min(vw*0.32, crownH*0.25);
     return `<circle cx="${(vx+vw*0.5).toFixed(1)}" cy="${((vy+vh) - r*0.35).toFixed(1)}" r="${r.toFixed(1)}" fill="${color}"/>`;
   }
   if(mark.type === 'canal'){
     // One thick, gently curved stroke, confined to the root — drifts from the centre near the
     // neck out toward the root's outer edge as it runs down, reading as a real canal curving
-    // inside the root rather than a rigid rod. Crowding a separate thin line per treated canal
-    // (1-3) into a ~17px-wide tooth just read as one blurred smudge, not a distinct count, so the
-    // icon always shows a single stroke now; the actual canal count is still tracked on the item
-    // (see the "Каналов" stepper) for pricing and the PDF service text.
+    // inside the root rather than a rigid rod. Always a single stroke: crowding a thin line per
+    // canal into a ~17px-wide tooth read as one blurred smudge, not a count. How many canals were
+    // treated is stated in the service name, which is what the patient actually reads.
     const {d} = canalCurve(vx, vy, vw, vh, crownY, crownH, 1);
     const lw = Math.max(vw*0.12, 2.2);
     return `<path d="${d}" fill="none" stroke="${color}" stroke-width="${lw.toFixed(2)}" stroke-linecap="round"/>`;
@@ -2464,7 +2462,7 @@ function addItemToStage(name, price, src){
   const sel = [...selectedTeeth].sort();
   const teethStr = sel.map(toDot).join(', ');
   const qty = sel.length || 1;
-  s.items.push({id:itemIdSeq++, name, price, basePrice:price, qty, teeth:teethStr, surfaces:1, canals:1, discountType:'none', discountValue:0,
+  s.items.push({id:itemIdSeq++, name, price, basePrice:price, qty, teeth:teethStr, discountType:'none', discountValue:0,
     icon:(src && src.icon) || undefined, jaw:(src && src.jaw) || undefined});
   selectedTeeth.clear();
   renderChart();
@@ -2493,18 +2491,6 @@ function setDiscountValue(stageId, itemId, val){
   it.discountValue = parseFloat(val) || 0;
   if(!it.discountType || it.discountType === 'none') it.discountType = 'amount';
   applyDiscount(it);
-  renderStages();
-}
-function setSurfaces(stageId, itemId, n){
-  const s = stages.find(s => s.id===stageId); if(!s) return;
-  const it = s.items.find(i => i.id===itemId); if(!it) return;
-  it.surfaces = n;
-  renderStages();
-}
-function setCanals(stageId, itemId, n){
-  const s = stages.find(s => s.id===stageId); if(!s) return;
-  const it = s.items.find(i => i.id===itemId); if(!it) return;
-  it.canals = n;
   renderStages();
 }
 function removeItem(stageId, itemId){
@@ -2553,17 +2539,7 @@ function renderStages(){
       if(it.basePrice === undefined) it.basePrice = it.price;
       if(it.discountType === undefined) it.discountType = 'none';
       if(it.discountValue === undefined) it.discountValue = 0;
-      if(it.surfaces === undefined) it.surfaces = 1;
-      if(it.canals === undefined) it.canals = 1;
       const markType = resolveMarkType(it);
-      const surfacesUi = markType === 'filling' ? `
-          <span style="font-size:11px; color:var(--ink-soft); margin-left:2px;">Поверхн.:</span>
-          ${[1,2,3].map(n => `<button class="btn ${it.surfaces===n?'btn-primary':'btn-line'} btn-sm" style="padding:4px 8px;" onclick="setSurfaces(${s.id},${it.id},${n})">${n}</button>`).join('')}
-        ` : '';
-      const canalsUi = markType === 'canal' ? `
-          <span style="font-size:11px; color:var(--ink-soft); margin-left:2px;">Каналов:</span>
-          ${[1,2,3].map(n => `<button class="btn ${it.canals===n?'btn-primary':'btn-line'} btn-sm" style="padding:4px 8px;" onclick="setCanals(${s.id},${it.id},${n})">${n}</button>`).join('')}
-        ` : '';
       const discountAmt = it.basePrice > it.price ? (it.basePrice - it.price) : 0;
       const discountBadge = discountAmt > 0 ? `<div style="font-size:10.5px; font-weight:700; color:var(--green);">Скидка ${fmt(discountAmt)}</div>` : '';
       // Say so out loud when a symbol can't be drawn on a tooth the doctor picked, otherwise the
@@ -2586,7 +2562,6 @@ function renderStages(){
         <div class="item-teeth-label" style="grid-column:1/-1; display:flex; gap:6px; align-items:center; flex-wrap:wrap;">
           <input id="teeth-${it.id}" class="teeth-input" style="flex:1; min-width:110px;" type="text" placeholder="номера зубов, напр. 1.6, 1.7" value="${esc(it.teeth)}" onchange="updateItem(${s.id},${it.id},'teeth',this.value)">
           <button class="btn btn-line btn-sm" onclick="copySelectedTeeth(${s.id},${it.id})" title="Вставить зубы, выбранные на схеме">Вставить выбор</button>
-          ${surfacesUi}${canalsUi}
         </div>
         ${blockedNote}
         <div class="item-teeth-label" style="grid-column:1/-1; display:flex; gap:6px; align-items:center; flex-wrap:wrap;">
@@ -3743,7 +3718,7 @@ function openOnboarding(step){
   renderOnboarding();
   document.getElementById('onboard').classList.add('open'); coachRefresh();
 }
-const APP_VERSION = "1.6";   // видно в инструкции — чтобы понимать, что стоит на телефоне
+const APP_VERSION = "1.7";   // видно в инструкции — чтобы понимать, что стоит на телефоне
 function renderOnboarding(){
   document.getElementById('obVersion').textContent = 'Версия ' + APP_VERSION;
   const s = ONBOARD_STEPS[obStep];
