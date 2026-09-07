@@ -1482,7 +1482,7 @@ function closeSettings(){ document.getElementById('settingsBackdrop').classList.
 function setSettingsTab(cat){ settingsTab = cat; renderSettingsTabs(); renderSettingsList(); }
 function renderSettingsTabs(){
   document.getElementById('settingsTabs').innerHTML = Object.keys(SERVICES).map(cat =>
-    `<div class="tab ${cat===settingsTab?'active':''}" onclick="setSettingsTab('${cat}')">${cat}</div>`
+    `<div class="tab ${cat===settingsTab?'active':''}" onclick="setSettingsTab('${esc(cat)}')">${cat}</div>`
   ).join('');
 }
 function renderSettingsList(){
@@ -1506,11 +1506,11 @@ function renderSettingsList(){
       <div style="display:flex; justify-content:space-between; align-items:center; gap:8px;">
         <span class="s-name" style="flex:1;">${esc(s.name)}</span>
         ${searching ? `<span class="s-cat">${esc(cat.replace('Для ',''))}</span>` : ''}
-        <input type="number" class="num-input" style="width:88px;" value="${s.price}" onchange="updateCatalogPrice('${cat}', ${i}, this.value)">
-        <button class="icon-btn" onclick="deleteCatalogServiceFromSettings('${cat}', ${i})">🗑</button>
+        <input type="number" class="num-input" style="width:88px;" value="${s.price}" onchange="updateCatalogPrice('${esc(cat)}', ${i}, this.value)">
+        <button class="icon-btn" onclick="deleteCatalogServiceFromSettings('${esc(cat)}', ${i})">🗑</button>
       </div>
       <button class="btn btn-line btn-sm" style="align-self:flex-start; display:flex; align-items:center; gap:8px; padding:5px 10px;"
-              onclick="openIconPicker('${cat}', ${i})">
+              onclick="openIconPicker('${esc(cat)}', ${i})">
         ${chip}<span style="font-weight:500;">${esc(markTypeLabel(s))}</span>
         <span style="color:var(--blue); font-weight:600;">Изменить</span>
       </button>
@@ -2900,11 +2900,11 @@ async function renderPatients(){
   }
   el.innerHTML = list.map(p => `
     <div class="row-item">
-      <div class="grow" onclick="openPatient('${p.id}')">
+      <div class="grow" onclick="openPatient('${esc(p.id)}')">
         <div class="t1">${esc(p.name)}</div>
         <div class="t2">${counts[p.id] ? counts[p.id] + ' ' + plural(counts[p.id], 'план','плана','планов') : 'нет планов'}</div>
       </div>
-      <div class="acts"><button class="btn btn-line btn-sm" onclick="openPatient('${p.id}')">Открыть</button></div>
+      <div class="acts"><button class="btn btn-line btn-sm" onclick="openPatient('${esc(p.id)}')">Открыть</button></div>
     </div>`).join('');
 }
 function plural(n, one, few, many){
@@ -2969,14 +2969,14 @@ async function renderPatientPlans(){
   }
   el.innerHTML = list.map(e => `
     <div class="row-item">
-      <div class="grow" onclick="loadPlan('${e.id}')">
+      <div class="grow" onclick="loadPlan('${esc(e.id)}')">
         <div class="t1">${esc(e.title || 'Без названия')}</div>
         <div class="t2"><span class="sum">${fmt(e.total||0)}</span> · изменён ${fmtStamp(e.updatedAt) || '—'}<br>создан ${fmtStamp(e.createdAt) || '—'}</div>
       </div>
       <div class="acts">
-        <button class="btn btn-line btn-sm" onclick="loadPlan('${e.id}')">Открыть</button>
-        <button class="btn btn-line btn-sm" onclick="copyPlan('${e.id}')">Копия</button>
-        <button class="icon-btn" onclick="deletePlan('${e.id}')">🗑</button>
+        <button class="btn btn-line btn-sm" onclick="loadPlan('${esc(e.id)}')">Открыть</button>
+        <button class="btn btn-line btn-sm" onclick="copyPlan('${esc(e.id)}')">Копия</button>
+        <button class="icon-btn" onclick="deletePlan('${esc(e.id)}')">🗑</button>
       </div>
     </div>`).join('');
 }
@@ -3245,6 +3245,38 @@ function parseBackup(text){
   }
   if(d.format > BACKUP_FORMAT){
     throw new Error('Копия сделана более новой версией приложения. Обнови приложение и попробуй снова.');
+  }
+
+  // Файл копии приходит извне — его пересылают между устройствами и коллегами. Всё, что
+  // потом попадёт в разметку, проверяется здесь, на входе. Раньше id из такого файла
+  // подставлялся в onclick как есть, и подделанная копия выполняла в приложении чужой код.
+  const SAFE_ID = /^[A-Za-z0-9_-]{1,64}$/;
+  const badRef = () => { throw new Error('Файл повреждён или подделан: недопустимый внутренний номер записи. Ничего не изменено.'); };
+  for(const p of d.patients){
+    if(!p || typeof p !== 'object' || !SAFE_ID.test(String(p.id))) badRef();
+  }
+  for(const k of Object.keys(d.plans)){
+    if(!SAFE_ID.test(k)) badRef();
+  }
+  for(const [pid, list] of Object.entries(d.planIndex || {})){
+    if(!SAFE_ID.test(pid)) badRef();
+    for(const e of (list || [])){
+      if(!e || typeof e !== 'object' || !SAFE_ID.test(String(e.id))) badRef();
+    }
+  }
+  if(d.catalog && typeof d.catalog === 'object'){
+    for(const cat of Object.keys(d.catalog)){
+      if(cat.length > 80 || /[<>"\x27&]/.test(cat)){
+        throw new Error('Файл повреждён или подделан: недопустимое название раздела прайса. Ничего не изменено.');
+      }
+    }
+  }
+  if(d.colors && typeof d.colors === 'object'){
+    for(const v of Object.values(d.colors)){
+      if(typeof v !== 'string' || !/^#[0-9a-fA-F]{3,8}$/.test(v)){
+        throw new Error('Файл повреждён или подделан: недопустимый цвет символа. Ничего не изменено.');
+      }
+    }
   }
   return d;
 }
@@ -3711,7 +3743,7 @@ function openOnboarding(step){
   renderOnboarding();
   document.getElementById('onboard').classList.add('open'); coachRefresh();
 }
-const APP_VERSION = "1.5";   // видно в инструкции — чтобы понимать, что стоит на телефоне
+const APP_VERSION = "1.6";   // видно в инструкции — чтобы понимать, что стоит на телефоне
 function renderOnboarding(){
   document.getElementById('obVersion').textContent = 'Версия ' + APP_VERSION;
   const s = ONBOARD_STEPS[obStep];
