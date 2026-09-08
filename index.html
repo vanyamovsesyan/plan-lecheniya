@@ -199,10 +199,6 @@
     /* Зубы и скидка — отдельные смысловые строки, им нужен зазор сверху,
        а не общий отрицательный отступ, стягивающий их с полем цены. */
     .item-teeth-label{margin-top:2px;}
-    /* «Скидка от базовой (12 000 ₽):» вместе с ₽, % и полем в одну строку не влезает,
-       и поле уезжало на следующую строку в одиночестве. Пусть подпись занимает свою
-       строку целиком, а кнопки и поле стоят под ней вместе. */
-    .item-teeth-label > span:first-child{flex:1 1 100%;}
     .stage-head{flex-wrap:wrap;}
     .stage-head input{flex:1 1 100%;}
   }
@@ -3744,7 +3740,7 @@ function openOnboarding(step){
   renderOnboarding();
   document.getElementById('onboard').classList.add('open'); coachRefresh();
 }
-const APP_VERSION = "1.11";   // видно в инструкции — чтобы понимать, что стоит на телефоне
+const APP_VERSION = "1.12";   // видно в инструкции — чтобы понимать, что стоит на телефоне
 function renderOnboarding(){
   document.getElementById('obVersion').textContent = 'Версия ' + APP_VERSION;
   const s = ONBOARD_STEPS[obStep];
