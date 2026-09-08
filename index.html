@@ -182,11 +182,27 @@
   /* На телефоне пять колонок в строку не влезают: название уходит на свою строку,
      а под ним — кол-во, цена, сумма и крестик. Иначе сумма уезжает за край экрана. */
   @media (max-width:560px){
-    .item-row{grid-template-columns:62px 1fr auto 26px; row-gap:4px;}
-    .item-row > .name{grid-column:1/-1;}
+    /* Между услугами воздуха заметно больше, чем между строками внутри одной:
+       иначе пунктир теряется и весь этап читается сплошной стеной. */
+    .item-row{grid-template-columns:62px 1fr auto 26px; row-gap:6px; padding:14px 0;}
+    .item-row > .name{grid-column:1/-1; margin-bottom:2px;}
     .item-row > .line-total{justify-self:end; white-space:nowrap;}
-    .item-cap{display:block;}
-    .item-cap.c3{grid-column:3/5; text-align:right;}
+    /* Подпись прижата к своему полю. С равным зазором сверху и снизу «Кол-во»
+       и «Цена» висели ровно посередине и не читались как заголовки колонок. */
+    .item-cap{display:block; margin-bottom:-2px;}
+    /* «Сумма» стояла над крестиком, а не над числом. Сузить её до одной колонки нельзя:
+       она добивает строку подписей до конца, иначе поле «Кол-во» перескакивает
+       в освободившуюся ячейку рядом. Поэтому оставляем размах и сдвигаем текст
+       ровно на колонку крестика (26px) плюс зазор сетки (8px). Отступ именно внешний:
+       он укорачивает саму рамку подписи, и её правый край совпадает с правым краем суммы. */
+    .item-cap.c3{grid-column:3/5; text-align:right; margin-right:calc(26px + 8px);}
+    /* Зубы и скидка — отдельные смысловые строки, им нужен зазор сверху,
+       а не общий отрицательный отступ, стягивающий их с полем цены. */
+    .item-teeth-label{margin-top:2px;}
+    /* «Скидка от базовой (12 000 ₽):» вместе с ₽, % и полем в одну строку не влезает,
+       и поле уезжало на следующую строку в одиночестве. Пусть подпись занимает свою
+       строку целиком, а кнопки и поле стоят под ней вместе. */
+    .item-teeth-label > span:first-child{flex:1 1 100%;}
     .stage-head{flex-wrap:wrap;}
     .stage-head input{flex:1 1 100%;}
   }
@@ -3728,7 +3744,7 @@ function openOnboarding(step){
   renderOnboarding();
   document.getElementById('onboard').classList.add('open'); coachRefresh();
 }
-const APP_VERSION = "1.10";   // видно в инструкции — чтобы понимать, что стоит на телефоне
+const APP_VERSION = "1.11";   // видно в инструкции — чтобы понимать, что стоит на телефоне
 function renderOnboarding(){
   document.getElementById('obVersion').textContent = 'Версия ' + APP_VERSION;
   const s = ONBOARD_STEPS[obStep];
