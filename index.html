@@ -83,6 +83,10 @@
     background:#fff; width:100%;
   }
   input:focus{outline:2px solid var(--blue); outline-offset:1px; border-color:var(--blue);}
+  /* Safari на iPhone ставит дату по центру поля, и она не сходится с соседним
+     «Название плана». Прижимаем к левому краю, как у обычных полей. */
+  input[type=date]{text-align:left;}
+  input[type=date]::-webkit-date-and-time-value{text-align:left; margin:0;}
 
   /* tooth chart */
   .chart-legend{display:flex; gap:14px; font-size:11.5px; color:var(--ink-soft); margin-bottom:12px; flex-wrap:wrap;}
@@ -3718,7 +3722,7 @@ function openOnboarding(step){
   renderOnboarding();
   document.getElementById('onboard').classList.add('open'); coachRefresh();
 }
-const APP_VERSION = "1.8";   // видно в инструкции — чтобы понимать, что стоит на телефоне
+const APP_VERSION = "1.9";   // видно в инструкции — чтобы понимать, что стоит на телефоне
 function renderOnboarding(){
   document.getElementById('obVersion').textContent = 'Версия ' + APP_VERSION;
   const s = ONBOARD_STEPS[obStep];
