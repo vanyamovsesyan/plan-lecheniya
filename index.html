@@ -113,7 +113,7 @@
   .icon-chip{display:inline-flex; align-items:center; justify-content:center; background:#fff; border:1.3px solid #dde4f0; border-radius:6px; flex:none;}
   .icon-chip svg{display:block;}
   .chart-hint{font-size:12px; color:var(--ink-soft); margin-bottom:10px;}
-  /* Легенда из 12 значков съедала пол-экрана телефона перед схемой. Врач помнит свои
+  /* Легенда из 12 символов съедала пол-экрана телефона перед схемой. Врач помнит свои
      символы, поэтому она свёрнута и раскрывается по нажатию. */
   .legend-fold{margin-bottom:10px;}
   .legend-fold summary{
@@ -522,11 +522,11 @@
 
   <div class="card">
     <h2>Зубная схема</h2>
-    <div class="chart-hint">Тапни по зубу, чтобы выбрать его. Потом добавь услугу в этапе ниже — значок сам появится на зубе.</div>
+    <div class="chart-hint">Тапните по зубу, чтобы выбрать его. Потом добавьте услугу в этапе ниже — символ сам появится на зубе.</div>
     <details class="legend-fold">
-      <summary>Что означают значки</summary>
+      <summary>Что означают символы</summary>
       <div class="chart-legend" id="chartLegend"></div>
-      <div class="chart-hint" style="margin-bottom:0;">Значок берётся из настроек услуги (⚙️ Услуги и базовые цены) — там можно назначить любой вручную.</div>
+      <div class="chart-hint" style="margin-bottom:0;">Символ берётся из настроек услуги (⚙️ Услуги и базовые цены) — там можно назначить любой вручную.</div>
     </details>
     <div class="arch upper" id="archUpper"></div>
     <div class="arch lower" id="archLower"></div>
@@ -583,7 +583,7 @@
 
       <div class="field">
         <label>Сохранить копию</label>
-        <div class="ns-hint" style="margin:0 0 8px;">Один файл со всеми пациентами, планами, прайсом и текстом согласия. Положи его в облако или отправь себе в мессенджер.</div>
+        <div class="ns-hint" style="margin:0 0 8px;">Один файл со всеми пациентами, планами, прайсом и текстом согласия. Положите его в облако или отправьте себе в мессенджер.</div>
         <button class="btn btn-primary btn-sm" onclick="downloadBackup()">Сохранить файл копии</button>
       </div>
 
@@ -596,7 +596,7 @@
       </div>
 
       <div class="note" style="font-size:12.5px; background:var(--paper); border:1px solid var(--line); border-left:3px solid var(--amber, #8a6512); padding:11px 13px; border-radius:0 6px 6px 0; color:var(--ink-soft);">
-        Код подписки и счётчик пробного периода в копию не входят. Код введёшь заново — он у тебя в переписке.
+        Код подписки и счётчик пробного периода в копию не входят. Код введёте заново — он у вас в переписке.
       </div>
     </div>
     <div class="custom-service">
@@ -709,7 +709,7 @@
       </div>
       <div class="field">
         <label for="licenseInput">Код подписки</label>
-        <textarea id="licenseInput" rows="4" placeholder="Вставь сюда строку, которую тебе прислали"
+        <textarea id="licenseInput" rows="4" placeholder="Вставьте сюда строку, которую вам прислали"
                   style="width:100%; font-family:'IBM Plex Mono',ui-monospace,monospace; font-size:12px; line-height:1.5; padding:10px; border:1px solid var(--line); border-radius:10px; background:var(--paper); color:var(--ink); resize:vertical;"></textarea>
         <div class="ns-hint">Код проверяется на устройстве, интернет для этого не нужен.</div>
       </div>
@@ -1491,7 +1491,7 @@ function renderSettingsList(){
   const rows = matchServices(searching ? Object.keys(SERVICES) : [settingsTab], q);
   const el = document.getElementById('settingsList');
   if(!rows.length){
-    el.innerHTML = `<div class="empty-stage">${searching ? 'Ничего не нашли — проверь запрос.' : 'Список пуст — добавь услугу ниже.'}</div>`;
+    el.innerHTML = `<div class="empty-stage">${searching ? 'Ничего не нашли — проверьте запрос.' : 'Список пуст — добавьте услугу ниже.'}</div>`;
     return;
   }
   // Компактная строка: название, цена, символ одной кнопкой. Раньше здесь на КАЖДУЮ из сотни
@@ -1553,7 +1553,7 @@ function renderIconPicker(){
   document.getElementById('ipName').textContent = s.name;
   document.getElementById('ipLabel').textContent = markTypeLabel(s);
   document.getElementById('ipHint').textContent = key === 'auto'
-    ? 'Символ подобран по названию услуги. Если промахнулся — выбери нужный вручную.'
+    ? 'Символ подобран по названию услуги. Если он не подошёл — выберите нужный вручную.'
     : (key === 'none' ? 'Эта услуга ничего не рисует на схеме.' : 'Символ выбран вручную.');
 
   // Превью на моляре: на нём лучше всего видно, как символ садится на зуб.
@@ -2151,7 +2151,7 @@ function clearSelection(){
   renderChart();
 }
 function resetColorForSelected(){
-  if(!selectedTeeth.size){ alert('Сначала выбери зуб (тапни по нему), чтобы узнать, к какой услуге он привязан.'); return; }
+  if(!selectedTeeth.size){ alert('Сначала выберите зуб (тапните по нему), чтобы узнать, к какой услуге он привязан.'); return; }
   const lines = [...selectedTeeth].sort().map(n => {
     let found = null;
     for(const s of stages){
@@ -2339,7 +2339,7 @@ function matchServices(cats, query){
   return out;
 }
 // coachRefresh здесь обязателен: услуга добавляется ДО закрытия модалки, подсказка в этот момент
-// прячется (окно открыто) и больше ничем не будится — шаг «добавь услугу» выглядел как обрыв обучения.
+// прячется (окно открыто) и больше ничем не будится — шаг «добавьте услугу» выглядел как обрыв обучения.
 function closeModal(){ document.getElementById('modalBackdrop').classList.remove('open'); coachRefresh(); }
 function renderTabs(){
   const tabsEl = document.getElementById('tabs');
@@ -2361,7 +2361,7 @@ function renderServiceList(){
   const rows = matchServices(searching ? Object.keys(SERVICES) : [activeTab], q);
   const el = document.getElementById('serviceList');
   if(!rows.length){
-    el.innerHTML = `<div class="empty-stage">${searching ? 'Ничего не нашли — проверь запрос или добавь новую услугу ниже.' : 'Список пуст — добавь услугу ниже.'}</div>`;
+    el.innerHTML = `<div class="empty-stage">${searching ? 'Ничего не нашли — проверьте запрос или добавьте новую услугу ниже.' : 'Список пуст — добавьте услугу ниже.'}</div>`;
     return;
   }
   el.innerHTML = rows.map(({s, i, cat}) =>
@@ -2427,13 +2427,13 @@ function renderNsIcons(){
   }).join('');
   const opt = ICON_OPTIONS.find(o => o.key === nsIcon);
   document.getElementById('nsIconHint').textContent = nsIcon === 'auto'
-    ? 'Авто — символ подберётся по названию услуги. Если промахнётся, выбери значок вручную.'
+    ? 'Авто — символ подберётся по названию услуги. Если он не подойдёт, выберите его вручную.'
     : (nsIcon === 'none' ? 'Услуга не будет ничего рисовать на схеме.' : 'Символ: ' + (opt ? opt.label : nsIcon));
 }
 function setNsIcon(key){ nsIcon = key; renderNsIcons(); }
 async function saveNewService(){
   const name = document.getElementById('nsName').value.trim();
-  if(!name){ alert('Впиши название услуги.'); document.getElementById('nsName').focus(); return; }
+  if(!name){ alert('Впишите название услуги.'); document.getElementById('nsName').focus(); return; }
   const price = parseFloat(document.getElementById('nsPrice').value) || 0;
   const cat = document.getElementById('nsCat').value;
   const entry = {name, price, icon: nsIcon};
@@ -2524,7 +2524,7 @@ function updateItem(stageId, itemId, field, val){
   renderStages();
 }
 function copySelectedTeeth(stageId, itemId){
-  if(!selectedTeeth.size){ alert('Сначала выбери зуб на схеме (тапни по нему).'); return; }
+  if(!selectedTeeth.size){ alert('Сначала выберите зуб на схеме (тапните по нему).'); return; }
   const teeth = [...selectedTeeth].sort().map(toDot);
   updateItem(stageId, itemId, 'teeth', teeth.join(', '));
   document.getElementById(`teeth-${itemId}`).value = teeth.join(', ');
@@ -2702,8 +2702,8 @@ function licenseAllowsWork(){
 }
 function licenseBlockMessage(){
   const st = licenseState();
-  if(st.reason === 'trial') return `Пробный период закончился — использовано ${st.patients} из ${LICENSE.trialPatients} пациентов и ${st.plans} из ${LICENSE.trialPlans} планов.\n\nСтарые планы остаются доступны: их можно открыть и выгрузить в PDF. Чтобы создавать новые, введи код подписки.`;
-  return `Подписка закончилась ${st.until ? new Date(st.until).toLocaleDateString('ru-RU') : ''}.\n\nСтарые планы остаются доступны: их можно открыть и выгрузить в PDF. Чтобы создавать новые, введи код подписки.`;
+  if(st.reason === 'trial') return `Пробный период закончился — использовано ${st.patients} из ${LICENSE.trialPatients} пациентов и ${st.plans} из ${LICENSE.trialPlans} планов.\n\nСтарые планы остаются доступны: их можно открыть и выгрузить в PDF. Чтобы создавать новые, введите код подписки.`;
+  return `Подписка закончилась ${st.until ? new Date(st.until).toLocaleDateString('ru-RU') : ''}.\n\nСтарые планы остаются доступны: их можно открыть и выгрузить в PDF. Чтобы создавать новые, введите код подписки.`;
 }
 function requireLicense(){
   if(licenseAllowsWork()) return true;
@@ -2849,7 +2849,7 @@ let renderPatientsToken = 0;
 async function renderPatients(){
   const el = document.getElementById('patientsList');
   if(!storageAvailable()){
-    el.innerHTML = '<div class="row-empty">Сохранение недоступно в этом окне просмотра — открой страницу по обычной ссылке в браузере.</div>';
+    el.innerHTML = '<div class="row-empty">Сохранение недоступно в этом окне просмотра — откройте страницу по обычной ссылке в браузере.</div>';
     return;
   }
   const q = document.getElementById('patientSearch').value.trim().toLowerCase();
@@ -2861,7 +2861,7 @@ async function renderPatients(){
                          return a.name.localeCompare(b.name, 'ru');  // без отметки — по алфавиту
                        });
   if(!list.length){
-    el.innerHTML = `<div class="row-empty">${PATIENTS.length ? 'Никого не нашли по этому запросу.' : 'Пациентов пока нет. Добавь первого — и внутри него собирай планы лечения.'}</div>`;
+    el.innerHTML = `<div class="row-empty">${PATIENTS.length ? 'Никого не нашли по этому запросу.' : 'Пациентов пока нет. Добавьте первого — и внутри него собирайте планы лечения.'}</div>`;
     return;
   }
   // One storage read per match, so a broad query finishes LATER than the narrower one typed after
@@ -2889,7 +2889,7 @@ function plural(n, one, few, many){
   return many;
 }
 async function createPatient(){
-  if(!storageAvailable()){ alert('Сохранение недоступно в этом окне просмотра — открой страницу по обычной ссылке в браузере.'); return; }
+  if(!storageAvailable()){ alert('Сохранение недоступно в этом окне просмотра — откройте страницу по обычной ссылке в браузере.'); return; }
   if(!requireLicense()) return;
   const name = (prompt('ФИО пациента') || '').trim();
   if(!name) return;
@@ -2899,8 +2899,8 @@ async function createPatient(){
   await savePatients();
   // Про копию напоминаем не в первый день, а когда уже есть что терять.
   if(PATIENTS.length >= 3){
-    showTip('backup', 'Сделай резервную копию',
-      'Данные хранятся только на этом устройстве. Кнопка «Резервная копия» на главном экране сохранит один файл со всеми пациентами и планами — положи его в облако.');
+    showTip('backup', 'Сделайте резервную копию',
+      'Данные хранятся только на этом устройстве. Кнопка «Резервная копия» на главном экране сохранит один файл со всеми пациентами и планами — положите его в облако.');
   }
   await openPatient(p.id);
 }
@@ -3029,8 +3029,8 @@ function flushAutosave(){
 async function savePlan(opts){
   const silent = opts && opts.silent === true;
   clearTimeout(autosaveTimer); autosaveTimer = null;
-  if(!storageAvailable()){ if(!silent) alert('Сохранение недоступно в этом окне просмотра — открой страницу по обычной ссылке в браузере.'); return; }
-  if(!currentPatientId){ if(!silent) alert('Сначала выбери пациента.'); return; }
+  if(!storageAvailable()){ if(!silent) alert('Сохранение недоступно в этом окне просмотра — откройте страницу по обычной ссылке в браузере.'); return; }
+  if(!currentPatientId){ if(!silent) alert('Сначала выберите пациента.'); return; }
   // Pinned before the first await: navigation can change the globals while this is suspended, and
   // resuming with a different patient would file the plan under the wrong one (or under null).
   const pid = currentPatientId;
@@ -3344,7 +3344,7 @@ function previewBackup(input){
            <button class="btn btn-line btn-sm" onclick="runImport('merge')">Добавить к моим</button>
            <button class="btn btn-danger btn-sm" onclick="runImport('replace')">Заменить всё</button>
          </div>
-         <div class="ns-hint" style="margin-top:8px;">«Добавить» — если работаешь на двух устройствах: чего нет, то допишется, существующее не тронется. «Заменить всё» — для переезда на новый телефон: сначала сотрёт то, что есть здесь.</div>`;
+         <div class="ns-hint" style="margin-top:8px;">«Добавить» — если работаете на двух устройствах: чего нет, то допишется, существующее не тронется. «Заменить всё» — для переезда на новый телефон: сначала сотрёт то, что есть здесь.</div>`;
     }catch(e){
       box.innerHTML = `<div style="background:var(--red-mist); color:#8d2a1e; border-radius:10px; padding:11px 13px; font-size:13.5px;">${esc(e.message)}</div>`;
     }
@@ -3450,7 +3450,7 @@ function peekTokenDevice(token){
 async function submitLicenseToken(){
   const raw = document.getElementById('licenseInput').value.trim();
   const out = document.getElementById('licenseResult');
-  if(!raw){ out.style.color = 'var(--red)'; out.textContent = 'Вставь код.'; return; }
+  if(!raw){ out.style.color = 'var(--red)'; out.textContent = 'Вставьте код.'; return; }
   if(!LICENSE.publicKey){
     out.style.color = 'var(--red)';
     out.textContent = 'В этой сборке не настроен ключ проверки — коды приниматься не будут.';
@@ -3467,7 +3467,7 @@ async function submitLicenseToken(){
     out.style.color = 'var(--red)';
     out.textContent = (forDevice && forDevice !== installId)
       ? 'Этот код выпущен для другого устройства (' + forDevice + '), а у вас ' + installId + '. Попросите код на ваш номер.'
-      : 'Код не подошёл. Проверь, что скопирована строка целиком, без переносов и лишних пробелов.';
+      : 'Код не подошёл. Проверьте, что скопирована строка целиком, без переносов и лишних пробелов.';
   }
 }
 // Полоска состояния на экране пациентов — единственное постоянное напоминание. Ненавязчивое, пока
@@ -3529,20 +3529,20 @@ function closeWelcome(){
 const COACH_KEY = 'coach-progress-v1';
 let coachIdx = 0, coachOff = false;
 const COACH = [
-  {title:'Заведи пациента',
-   text:'Каждый план лечения принадлежит пациенту. Нажми эту кнопку и впиши ФИО.',
+  {title:'Заведите пациента',
+   text:'Каждый план лечения принадлежит пациенту. Нажмите эту кнопку и впишите ФИО.',
    sel:()=>document.getElementById('btnAddPatient'),
    done:()=>PATIENTS.length > 0},
-  {title:'Создай первый план',
+  {title:'Создайте первый план',
    text:'У одного пациента их может быть несколько: основной, альтернативный, обновлённый через год.',
    sel:()=>document.getElementById('btnNewPlan'),
    done:()=>document.getElementById('viewEditor').classList.contains('active')},
-  {title:'Выбери зубы на схеме',
-   text:'Тапни по зубам, с которыми работаешь — они подсветятся. Услуга, добавленная следом, привяжется именно к ним.',
+  {title:'Выберите зубы на схеме',
+   text:'Тапните по зубам, с которыми работаете — они подсветятся. Услуга, добавленная следом, привяжется именно к ним.',
    sel:()=>document.getElementById('archUpper'),
    done:()=>selectedTeeth.size > 0 || stages.some(s=>s.items.some(i=>i.teeth))},
-  {title:'Добавь услугу',
-   text:'Откроется твой прайс с поиском. Если нужной услуги нет — там же кнопка «Добавить новую услугу».',
+  {title:'Добавьте услугу',
+   text:'Откроется ваш прайс с поиском. Если нужной услуги нет — там же кнопка «Добавить новую услугу».',
    sel:()=>document.querySelector('#viewEditor .stage-foot .btn'),
    done:()=>stages.some(s=>s.items.length)},
   {title:'Цену можно поменять',
@@ -3553,7 +3553,7 @@ const COACH = [
    text:'Поле под списком услуг. Сюда пишут, что и почему делается в этом этапе — попадёт в PDF под таблицей.',
    sel:()=>document.querySelector('#viewEditor .stage-note'),
    manual:true},
-  {title:'Готово — забирай PDF',
+  {title:'Готово — заберите PDF',
    text:'Соберётся документ со схемой, этапами и суммой. Работает без интернета.',
    sel:()=>document.getElementById('bottomBar'),
    manual:true},
@@ -3610,7 +3610,7 @@ function coachRefresh(){
   const step = COACH[i];
   const el = step.sel();
   // Видимость проверяем по размеру, а НЕ по offsetParent: у элемента с position:fixed (нижняя
-  // панель с кнопкой PDF) offsetParent всегда null, и шаг «забирай PDF» молча не показывался.
+  // панель с кнопкой PDF) offsetParent всегда null, и шаг «заберите PDF» молча не показывался.
   const box = el && el.getBoundingClientRect();
   if(!el || !el.isConnected || !box || (box.width === 0 && box.height === 0)){
     wrap.classList.remove('on'); return;                                // не тот экран — ждём
@@ -3658,17 +3658,17 @@ let coachTick = null;
 const ONBOARD_KEY = 'onboarding-seen-v1';
 const ONBOARD_STEPS = [
   {ico:'👤', title:'Пациент, потом план',
-   body:`<p>Приложение открывается списком пациентов. Найди человека по ФИО или добавь нового — и уже внутри его карточки собирай планы лечения.</p>
+   body:`<p>Приложение открывается списком пациентов. Найдите человека по ФИО или добавьте нового — и уже внутри его карточки собирайте планы лечения.</p>
          <p>У одного пациента может быть сколько угодно планов: основной, альтернативный, обновлённый через год. Каждый хранит дату создания и дату последнего изменения, так что видно, какой из них свежий.</p>`},
   {ico:'🦷', title:'Схема зубов',
-   body:`<p>Выбери зубы тапом, потом добавь услугу в этапе — на выбранных зубах появится символ.</p>
+   body:`<p>Выберите зубы тапом, потом добавьте услугу в этапе — на выбранных зубах появится символ.</p>
          <p>Символы показывают, что именно делается с зубом: коронка надевается сверху, пломбировка идёт внутри канала, имплантат встаёт вместо зуба. На одном зубе они накладываются друг на друга — канал, культя и коронка поверх.</p>`},
   {ico:'💰', title:'Свой прайс',
-   body:`<p>В «Услуги и базовые цены» лежит твой список услуг. Цену можно поменять, услугу — добавить или удалить.</p>
-         <p>Там же выбирается символ для каждой услуги и его цвет: если автоопределение по названию промахнулось, назначь значок вручную.</p>`},
+   body:`<p>В «Услуги и базовые цены» лежит ваш список услуг. Цену можно поменять, услугу — добавить или удалить.</p>
+         <p>Там же выбирается символ для каждой услуги и его цвет: если автоопределение по названию промахнулось, назначьте символ вручную.</p>`},
   {ico:'🏷️', title:'Скидку видно, повышение — нет',
-   body:`<p>Это стоит знать до того, как отдашь пациенту первый документ.</p>
-         <p>Если поставить <b>скидку</b>, пациент увидит её в PDF: старая цена зачёркнута, рядом стоит новая. Это работает на тебя — видно, что уступил.</p>
+   body:`<p>Это стоит знать до того, как отдадите пациенту первый документ.</p>
+         <p>Если поставить <b>скидку</b>, пациент увидит её в PDF: старая цена зачёркнута, рядом стоит новая. Это работает на вас — видно, что вы уступили.</p>
          <p>А если просто <b>вписать цену выше</b> базовой, в документе будет только новая цифра. Никаких пометок, что она отличается от прайса, — выглядит как обычная стоимость услуги.</p>
          <div style="border:1px solid var(--line); border-radius:10px; overflow:hidden; margin:12px 0 6px;">
            <div style="padding:8px 12px; background:var(--paper); font-size:10.5px; font-weight:700; color:var(--ink-soft); text-transform:uppercase; letter-spacing:.06em;">Как это выглядит у пациента</div>
@@ -3687,10 +3687,10 @@ const ONBOARD_STEPS = [
    body:`<p>У каждого плана есть <b>код документа</b> — он виден в редакторе рядом с датами.</p>
          <p>Код считается по содержанию плана. Поменяли в присланной копии сумму — код не сойдётся с тем, что показывает приложение.</p>
          <p>На странице PDF его нет, чтобы не смущать пациента: он лежит в свойствах файла.</p>`},
-  {ico:'🔒', title:'Данные остаются у тебя',
+  {ico:'🔒', title:'Данные остаются у вас',
    body:`<div class="privacy"><p><b>Планы и пациенты хранятся только на этом устройстве.</b></p>
          <p style="margin-top:8px">Нет аккаунта, нет входа, нет сервера. Ничего не отправляется в интернет и никуда не копируется — мы не собираем и не используем ваши данные и данные ваших пациентов.</p>
-         <p style="margin-top:8px">Обратная сторона: раз копии нигде нет, восстановить её неоткуда. Планы исчезнут, если удалить приложение или очистить его данные. Готовый PDF сохраняй отдельно — он остаётся у тебя в файлах.</p></div>`},
+         <p style="margin-top:8px">Обратная сторона: раз копии нигде нет, восстановить её неоткуда. Планы исчезнут, если удалить приложение или очистить его данные. Готовый PDF сохраняйте отдельно — он остаётся у вас в файлах.</p></div>`},
 ];
 let obStep = 0;
 const SUPPORT_TG = 'Dr_movsesyan';
@@ -3718,7 +3718,7 @@ function openOnboarding(step){
   renderOnboarding();
   document.getElementById('onboard').classList.add('open'); coachRefresh();
 }
-const APP_VERSION = "1.7";   // видно в инструкции — чтобы понимать, что стоит на телефоне
+const APP_VERSION = "1.8";   // видно в инструкции — чтобы понимать, что стоит на телефоне
 function renderOnboarding(){
   document.getElementById('obVersion').textContent = 'Версия ' + APP_VERSION;
   const s = ONBOARD_STEPS[obStep];

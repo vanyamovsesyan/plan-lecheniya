@@ -10,7 +10,7 @@
  *
  * ВАЖНО при выпуске новой версии: подними CACHE_VERSION, иначе телефоны продолжат отдавать старое.
  */
-const CACHE_VERSION = 'plan-lecheniya-v12';
+const CACHE_VERSION = 'plan-lecheniya-v13';
 const ASSETS = [
   './',
   './index.html',
