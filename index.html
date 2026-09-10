@@ -98,7 +98,11 @@
   .chart-legend{display:flex; gap:14px; font-size:11.5px; color:var(--ink-soft); margin-bottom:12px; flex-wrap:wrap;}
   .chart-legend span{display:inline-flex; align-items:center; gap:5px;}
   .dot{width:10px; height:10px; border-radius:3px; display:inline-block;}
-  .arch{display:flex; justify-content:center; align-items:flex-end; gap:4px; margin-bottom:10px; flex-wrap:nowrap; overflow-x:auto; padding:6px 2px; position:relative;}
+  /* Промежутков между зубами нет — вместо них у каждого зуба поля по 2px. Выглядит так же,
+     но тап между двумя зубами теперь попадает в ближайший, а не в пустоту. «safe center»:
+     если схема всё же шире экрана, лишнее уходит вправо и прокручивается, а не обрезается
+     слева без возможности до него добраться. */
+  .arch{display:flex; justify-content:center; justify-content:safe center; align-items:flex-end; gap:0; margin-bottom:10px; flex-wrap:nowrap; overflow-x:auto; padding:6px 2px; position:relative;}
   /* A denture / aligner is not a per-tooth mark — it covers a whole jaw. Drawn as one translucent
      band across the arch from 7 to 7, over the crowns, rather than repeating an icon on 14 teeth. */
   /* Spans the whole arch box so its path can be written straight in arch coordinates — the
@@ -109,7 +113,7 @@
   .quad-gap{width:10px; flex:none;}
   .tooth{
     flex:none; display:flex; flex-direction:column; align-items:center; gap:3px;
-    cursor:pointer; user-select:none;
+    cursor:pointer; user-select:none; padding:0 2px;
   }
   .tooth .num{font-size:9.5px; color:var(--ink-soft); font-weight:700;}
   .tooth .shape{
@@ -154,10 +158,22 @@
   .btn-ghost:hover{background:#dbe6ff;}
   .btn-line{background:#fff; border:1.4px solid var(--line); color:var(--ink-soft);}
   .btn-line:hover{border-color:var(--blue); color:var(--blue-deep);}
-  .btn-danger{background:transparent; color:var(--red); padding:4px 8px; font-size:12px; font-weight:700;}
+  /* border:none обязателен: «Удалить этап» стоит без класса .btn, и Android рисовал ему
+     чёрную системную рамку, а iPhone — серую подложку. */
+  .btn-danger{background:transparent; border:none; color:var(--red); padding:4px 8px; font-size:12px; font-weight:700;}
   .btn-sm{padding:6px 10px; font-size:12.5px; border-radius:7px;}
+  .btn-tog{padding:4px 8px;}
   .icon-btn{background:transparent; border:none; color:var(--ink-soft); font-size:16px; padding:2px 6px; border-radius:6px;}
   .icon-btn:hover{background:var(--paper); color:var(--red);}
+  /* Android по умолчанию набирает поле ввода моноширинным шрифтом — текст согласия
+     выглядел как код. Поле для кода подписки моноширинное нарочно, у него свой стиль. */
+  textarea{font-family:inherit;}
+  #agreementText{width:100%; box-sizing:border-box; font-size:13px; line-height:1.5; color:var(--ink);
+    border:1.4px solid var(--line); border-radius:9px; padding:10px 12px; background:#fff; resize:vertical;}
+  /* Системная кнопка выбора файла на Android серая и чужая — оформляем как остальные. */
+  input[type=file]{font-family:inherit; font-size:13px; color:var(--ink-soft); max-width:100%;}
+  input[type=file]::file-selector-button{font-family:inherit; font-size:13px; font-weight:700; color:var(--ink);
+    background:#fff; border:1.4px solid var(--line); border-radius:9px; padding:9px 14px; margin-right:10px; cursor:pointer;}
 
   /* stages */
   .stage{border:1.4px solid var(--line); border-radius:12px; padding:14px; margin-bottom:12px; background:#fcfdff;}
@@ -184,7 +200,9 @@
   @media (max-width:560px){
     /* Между услугами воздуха заметно больше, чем между строками внутри одной:
        иначе пунктир теряется и весь этап читается сплошной стеной. */
-    .item-row{grid-template-columns:62px 1fr auto 26px; row-gap:6px; padding:14px 0;}
+    .item-row{grid-template-columns:46px 1fr auto 40px; row-gap:6px; padding:14px 0;}
+    /* Крестику 40px под палец; ширину ему отдало поле количества (62 → 46px, там одна-две
+       цифры). Первый вариант отнимал её у цены — на 360px «12000» переставало влезать. */
     .item-row > .name{grid-column:1/-1; margin-bottom:2px;}
     .item-row > .line-total{justify-self:end; white-space:nowrap;}
     /* Подпись прижата к своему полю. С равным зазором сверху и снизу «Кол-во»
@@ -193,14 +211,25 @@
     /* «Сумма» стояла над крестиком, а не над числом. Сузить её до одной колонки нельзя:
        она добивает строку подписей до конца, иначе поле «Кол-во» перескакивает
        в освободившуюся ячейку рядом. Поэтому оставляем размах и сдвигаем текст
-       ровно на колонку крестика (26px) плюс зазор сетки (8px). Отступ именно внешний:
+       ровно на колонку крестика (40px) плюс зазор сетки (8px). Отступ именно внешний:
        он укорачивает саму рамку подписи, и её правый край совпадает с правым краем суммы. */
-    .item-cap.c3{grid-column:3/5; text-align:right; margin-right:calc(26px + 8px);}
+    .item-cap.c3{grid-column:3/5; text-align:right; margin-right:calc(40px + 8px);}
     /* Зубы и скидка — отдельные смысловые строки, им нужен зазор сверху,
        а не общий отрицательный отступ, стягивающий их с полем цены. */
     .item-teeth-label{margin-top:2px;}
     .stage-head{flex-wrap:wrap;}
     .stage-head input{flex:1 1 100%;}
+    /* Схеме нужно 320px, а на Android 360px ей доставалось 275 — зубы 18 и 28 уходили
+       за край. Она заступает в поля карточки (+24px), а зазор между рисунками зубов
+       2px вместо 4 (−32px): так влезает целиком, и сами зубы уменьшать не пришлось.
+       Шаг под палец от зазора не зависит — он всё равно равен ширине экрана на 16. */
+    .arch{margin-left:-12px; margin-right:-12px;}
+    .tooth{padding:0 1px;}
+    /* Цели нажатия под палец. Было ↑ ↓ 20×22, ✕ 26×25, ₽ и % 25×24. */
+    .icon-btn{min-width:40px; min-height:40px; padding:8px 10px;}
+    .btn-tog{min-width:40px; min-height:38px; padding:8px 10px;}
+    .btn, .btn-danger{min-height:38px;}
+    .item-row .num-input{padding:9px 8px;}
   }
 
   .stage-foot{display:flex; justify-content:space-between; align-items:center; margin-top:10px;}
@@ -611,7 +640,7 @@
 
       <div class="field" style="border-top:1px solid var(--line); padding-top:14px;">
         <label>Восстановить из копии</label>
-        <div class="ns-hint" style="margin:0 0 8px;">Выбери файл — сначала покажу, что внутри, и только потом спрошу, что с ним делать.</div>
+        <div class="ns-hint" style="margin:0 0 8px;">Выберите файл — сначала покажу, что внутри, и только потом спрошу, что с ним делать.</div>
         <input type="file" id="backupFile" accept="application/json,.json" onchange="previewBackup(this)"
                style="width:100%; font-size:13px; padding:8px; border:1px solid var(--line); border-radius:10px; background:var(--paper);">
         <div id="backupPreview" style="margin-top:12px;"></div>
@@ -2592,8 +2621,8 @@ function renderStages(){
         ${blockedNote}
         <div class="item-teeth-label" style="grid-column:1/-1; display:flex; gap:6px; align-items:center; flex-wrap:wrap;">
           <span style="font-size:11px; color:var(--ink-soft);">Скидка от базовой (${fmt(it.basePrice)}):</span>
-          <button class="btn ${it.discountType==='amount'?'btn-primary':'btn-line'} btn-sm" style="padding:4px 8px;" onclick="setDiscountType(${s.id},${it.id},'amount')">₽</button>
-          <button class="btn ${it.discountType==='percent'?'btn-primary':'btn-line'} btn-sm" style="padding:4px 8px;" onclick="setDiscountType(${s.id},${it.id},'percent')">%</button>
+          <button class="btn ${it.discountType==='amount'?'btn-primary':'btn-line'} btn-sm btn-tog" onclick="setDiscountType(${s.id},${it.id},'amount')">₽</button>
+          <button class="btn ${it.discountType==='percent'?'btn-primary':'btn-line'} btn-sm btn-tog" onclick="setDiscountType(${s.id},${it.id},'percent')">%</button>
           <input type="number" class="num-input" style="width:64px;" value="${it.discountValue || ''}" placeholder="0" onchange="setDiscountValue(${s.id},${it.id}, this.value)">
         </div>
       </div>
@@ -3245,7 +3274,7 @@ function parseBackup(text){
     throw new Error('Файл не похож на копию «Плана лечения».');
   }
   if(d.format > BACKUP_FORMAT){
-    throw new Error('Копия сделана более новой версией приложения. Обнови приложение и попробуй снова.');
+    throw new Error('Копия сделана более новой версией приложения. Обновите приложение и попробуйте снова.');
   }
 
   // Файл копии приходит извне — его пересылают между устройствами и коллегами. Всё, что
@@ -3744,7 +3773,7 @@ function openOnboarding(step){
   renderOnboarding();
   document.getElementById('onboard').classList.add('open'); coachRefresh();
 }
-const APP_VERSION = "1.13";   // видно в инструкции — чтобы понимать, что стоит на телефоне
+const APP_VERSION = "1.14";   // видно в инструкции — чтобы понимать, что стоит на телефоне
 function renderOnboarding(){
   document.getElementById('obVersion').textContent = 'Версия ' + APP_VERSION;
   const s = ONBOARD_STEPS[obStep];
@@ -3810,7 +3839,7 @@ addStage();
 // and App Review is entitled to object to an app that downloads executable code at runtime.
 async function ensurePdfLibs(){
   if(!window.html2canvas || !window.jspdf){
-    throw new Error('Библиотеки PDF не загрузились. Перезапусти приложение.');
+    throw new Error('Библиотеки PDF не загрузились. Перезапустите приложение.');
   }
 }
 // Content fingerprint printed in the PDF footer. Derived from WHAT the plan says — patient, date,
@@ -4046,7 +4075,7 @@ async function sharePdf(btn){
     await navigator.share({files:[lastPdfFile], title:'План лечения'});
   }catch(e){
     if(e && e.name === 'AbortError') return;
-    btn.textContent = 'Не получилось — скачай файл ниже';
+    btn.textContent = 'Не получилось — скачайте файл ниже';
     setTimeout(() => { btn.textContent = orig; }, 2500);
   }
 }
